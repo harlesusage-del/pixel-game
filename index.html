@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>PIXEL LIFE: TWO SHOPS, ONE LIFE</title>
+<style>
+  :root{--bg:#1d2033;--panel:#2b3050;--edge:#f2c14e;--txt:#f4efe6;--mut:#a9aecb;--ok:#6fcf97;--bad:#eb6b6b}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:16px/1.5 "Courier New",monospace;overscroll-behavior:none}
+  main{max-width:520px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top)) 12px 20px}
+  h1{font-size:22px;margin:0;color:var(--edge);letter-spacing:1px}
+  .slogan{color:var(--mut);margin:4px 0 16px;font-size:14px}
+  .panel{background:var(--panel);border:3px solid var(--edge);padding:16px;margin-bottom:16px;box-shadow:4px 4px 0 #0008}
+  h2{margin:0 0 10px;font-size:16px;color:var(--edge)}
+  input,select,button{font:inherit;width:100%;padding:12px;margin:6px 0;border:3px solid #0008;background:#1d2033;color:var(--txt);min-height:46px}
+  button{background:var(--edge);color:#1d2033;font-weight:bold;cursor:pointer}
+  button.sec{background:var(--panel);color:var(--txt);border-color:var(--edge)}
+  button:disabled{opacity:.5}
+  .row{display:flex;gap:8px}.row>*{flex:1}
+  .msg{min-height:22px;font-size:14px}.err{color:var(--bad)}.good{color:var(--ok)}
+  .code{font-size:24px;text-align:center;letter-spacing:2px;background:#1d2033;padding:10px;border:3px dashed var(--edge);user-select:all}
+  .m{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dashed #fff3;gap:8px}
+  .tag{font-size:12px;padding:2px 8px;border:2px solid var(--edge);color:var(--edge)}
+  .dot{display:inline-block;width:10px;height:10px;margin-right:6px;background:var(--mut)}.dot.on{background:var(--ok)}
+  .hidden{display:none!important}
+  .status{font-size:13px;color:var(--mut);display:flex;justify-content:space-between}
+  /* Game */
+  #game{position:fixed;inset:0;background:#000;touch-action:none;user-select:none;-webkit-user-select:none}
+  #cv{width:100%;height:100%;display:block;image-rendering:pixelated}
+  .hud{position:absolute;left:0;right:0;top:0;padding:calc(8px + env(safe-area-inset-top)) 10px 0;display:flex;justify-content:space-between;gap:8px;pointer-events:none;font-size:12px}
+  .hud>div{background:#1d2033cc;border:2px solid var(--edge);padding:4px 8px;pointer-events:auto}
+  #g-menu{width:auto;min-height:36px;padding:4px 10px;margin:0;font-size:12px}
+  #stick{position:absolute;left:calc(18px + env(safe-area-inset-left));bottom:calc(24px + env(safe-area-inset-bottom));width:120px;height:120px;border-radius:50%;background:#ffffff18;border:3px solid #f2c14e88}
+  #knob{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:50%;background:#f2c14ecc}
+  #act{position:absolute;right:calc(22px + env(safe-area-inset-right));bottom:calc(40px + env(safe-area-inset-bottom));width:84px;height:84px;border-radius:50%;margin:0;padding:0}
+  #toast{position:absolute;left:50%;top:calc(52px + env(safe-area-inset-top));transform:translateX(-50%);background:#1d2033ee;border:2px solid var(--edge);padding:8px 12px;font-size:13px;max-width:90%;text-align:center;pointer-events:none}
+  #prompt{position:absolute;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#1d2033ee;border:2px solid var(--ok);padding:4px 10px;font-size:13px;pointer-events:none}
+  @media (hover:hover) and (pointer:fine){#stick{display:none}}
+</style>
+</head>
+<body>
+<main id="ui">
+  <h1>PIXEL LIFE: TWO SHOPS, ONE LIFE</h1>
+  <div class="slogan">Bangun bisnis, jalani cerita, dan tumbuhkan kehidupan bersama.</div>
+  <div class="status"><span id="net"><span class="dot"></span>Memeriksa koneksi…</span><span>v0.2 — Tahap 1+2</span></div>
+  <div id="cfgwarn" class="panel hidden err" style="margin-top:12px">Isi SUPABASE_URL dan SUPABASE_ANON_KEY di bagian CONFIG pada berkas ini (cari "CONFIG").</div>
+
+  <section id="v-auth" class="panel hidden" style="margin-top:12px">
+    <h2>MASUK / DAFTAR</h2>
+    <input id="a-name" placeholder="Nama pemain (untuk pendaftaran)" maxlength="24" autocomplete="nickname">
+    <input id="a-email" type="email" placeholder="Email" autocomplete="email">
+    <input id="a-pass" type="password" placeholder="Kata sandi (min. 8 karakter)" autocomplete="current-password">
+    <div class="row"><button id="b-login">MASUK</button><button id="b-signup" class="sec">DAFTAR</button></div>
+    <div id="a-msg" class="msg"></div>
+  </section>
+
+  <section id="v-menu" class="hidden" style="margin-top:12px">
+    <div class="panel"><h2>HALO, <span id="who"></span></h2><button id="b-logout" class="sec">KELUAR AKUN</button></div>
+    <div class="panel"><h2>BUAT DUNIA BARU</h2>
+      <select id="c-role"><option value="florist">Saya Florist (toko bouquet)</option><option value="mechanic">Saya Mekanik (bengkel motor)</option></select>
+      <button id="b-create">BUAT DUNIA BARU</button></div>
+    <div class="panel"><h2>MASUK KE DUNIA</h2>
+      <input id="j-code" placeholder="KOTA-XXXX-XXXX" autocapitalize="characters" maxlength="14">
+      <button id="b-join">MASUK KE DUNIA</button></div>
+    <div class="panel"><h2>DUNIA SAYA</h2><div id="worlds">Memuat…</div></div>
+    <div id="m-msg" class="msg"></div>
+  </section>
+
+  <section id="v-world" class="hidden" style="margin-top:12px">
+    <div class="panel"><h2>KODE RUANG</h2><div class="code" id="w-code"></div>
+      <div class="slogan" style="margin:8px 0 0">Kode saja tidak cukup: pemain kedua tetap harus masuk akun.</div></div>
+    <div class="panel"><h2>PEMAIN</h2><div id="w-members"></div><div id="w-wait" class="msg"></div></div>
+    <button id="b-play">MASUK KE KOTA</button>
+    <button id="b-back" class="sec">KEMBALI KE MENU</button>
+  </section>
+</main>
+
+<div id="game" class="hidden">
+  <canvas id="cv"></canvas>
+  <div class="hud">
+    <div id="h-info">—</div>
+    <div style="display:flex;gap:6px;align-items:center"><span id="h-net"></span><button id="g-menu" class="sec">LOBI</button></div>
+  </div>
+  <div id="toast" class="hidden"></div>
+  <div id="prompt" class="hidden"></div>
+  <div id="stick"><div id="knob"></div></div>
+  <button id="act">AKSI</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+// ======================= CONFIG =======================
+// Hanya anon key. JANGAN PERNAH memasukkan service-role key.
+const SUPABASE_URL = "GANTI-DENGAN-URL-PROYEK";
+const SUPABASE_ANON_KEY = "GANTI-DENGAN-ANON-KEY";
+// ======================================================
+
+(() => {
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ROLE = { florist: 'Florist', mechanic: 'Mekanik' };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const showView = v => ['v-auth','v-menu','v-world'].forEach(x => $(x).classList.toggle('hidden', x !== v));
+const say = (el, t, ok) => { $(el).textContent = t || ''; $(el).className = 'msg ' + (ok ? 'good' : 'err'); };
+
+// ======================= MODUL: KOTA (peta, tabrakan, render statis) =======================
+const City = (() => {
+  const TS = 16, W = 40, H = 28;
+  const T = { GRASS:0, ROAD:1, WALL:2, TREE:3, DOOR:4, PLAZA:5 };
+  const grid = new Uint8Array(W * H);
+  const hash = (x, y) => { let h = (x * 374761393 + y * 668265263) | 0; h = (h ^ (h >> 13)) * 1274126177 | 0; return ((h ^ (h >> 16)) >>> 0); };
+  const buildings = [
+    { id:'florist',  name:'Toko Bunga',  x:5,  y:7,  w:6, h:4, roof:'#e87aa6', wall:'#f3d9e3' },
+    { id:'mechanic', name:'Bengkel',     x:28, y:7,  w:7, h:4, roof:'#4a79c9', wall:'#c9d3e6' },
+    { id:'cafe',     name:'Kafe',        x:5,  y:17, w:5, h:4, roof:'#a0693d', wall:'#ead8c0' },
+    { id:'hall',     name:'Balai Kota',  x:16, y:2,  w:8, h:5, roof:'#7a7f8f', wall:'#dcdde3' },
+    { id:'house',    name:'Rumah',       x:29, y:17, w:5, h:4, roof:'#c9574f', wall:'#efe0cf' },
+    { id:'market',   name:'Pasar',       x:13, y:18, w:5, h:4, roof:'#4fa36a', wall:'#d8ead9' },
+  ];
+  const doors = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    let t = T.GRASS;
+    if (x === 0 || y === 0 || x === W-1 || y === H-1) t = T.TREE;
+    else if ((y === 13 || y === 14) || (x === 19 || x === 20)) t = T.ROAD;
+    if (x >= 17 && x <= 22 && y >= 11 && y <= 16) t = T.PLAZA;
+    if (t === T.GRASS && x >= 33 && y >= 21 && hash(x, y) % 4 === 0) t = T.TREE; // taman
+    grid[y*W + x] = t;
+  }
+  for (const b of buildings) {
+    for (let y = b.y; y < b.y + b.h; y++) for (let x = b.x; x < b.x + b.w; x++) grid[y*W + x] = T.WALL;
+    const dx = b.x + (b.w >> 1), dy = b.y + b.h - 1;
+    grid[dy*W + dx] = T.DOOR; doors.push({ id:b.id, name:b.name, x:dx*TS + TS/2, y:dy*TS + TS });
+  }
+  const tile = (tx, ty) => (tx < 0 || ty < 0 || tx >= W || ty >= H) ? T.TREE : grid[ty*W + tx];
+  const solidAt = (px, py) => { const t = tile(Math.floor(px/TS), Math.floor(py/TS)); return t === T.WALL || t === T.TREE; };
+  // Kotak tabrak kaki: lebar 10, tinggi 6, berpusat di (x, y) = telapak kaki
+  const blocked = (x, y) => solidAt(x-5, y-6) || solidAt(x+4.99, y-6) || solidAt(x-5, y) || solidAt(x+4.99, y);
+
+  function render() {
+    const c = document.createElement('canvas'); c.width = W*TS; c.height = H*TS;
+    const g = c.getContext('2d'); g.imageSmoothingEnabled = false;
+    for (let ty = 0; ty < H; ty++) for (let tx = 0; tx < W; tx++) {
+      const t = grid[ty*W + tx], px = tx*TS, py = ty*TS, h = hash(tx, ty);
+      g.fillStyle = (tx+ty)%2 ? '#5fae5a' : '#63b35e'; g.fillRect(px, py, TS, TS);
+      if (t === T.GRASS || t === T.TREE) { g.fillStyle = '#4e9a4d'; g.fillRect(px + h%13, py + (h>>4)%13, 1, 2); g.fillRect(px + (h>>8)%13, py + (h>>12)%13, 1, 2); }
+      if (t === T.ROAD) { g.fillStyle = '#6b6f7a'; g.fillRect(px, py, TS, TS); g.fillStyle = '#7b808c'; g.fillRect(px + h%14, py + (h>>5)%14, 2, 1);
+        if (ty === 13 && tx % 2 === 0 && tx !== 19 && tx !== 20) { g.fillStyle = '#d9d36a'; g.fillRect(px+2, py+TS-1, 6, 1); } }
+      if (t === T.PLAZA) { g.fillStyle = (tx+ty)%2 ? '#d8c9a8' : '#cdbd9a'; g.fillRect(px, py, TS, TS); }
+      if (t === T.TREE) { g.fillStyle = '#6b4a2b'; g.fillRect(px+7, py+10, 3, 6); g.fillStyle = '#2f7d3a'; g.fillRect(px+2, py+1, 12, 10); g.fillStyle = '#3d9748'; g.fillRect(px+4, py+2, 5, 4); }
+    }
+    for (const b of buildings) {
+      for (let y = b.y; y < b.y + b.h; y++) for (let x = b.x; x < b.x + b.w; x++) {
+        const px = x*TS, py = y*TS, ry = y - b.y;
+        if (ry < 2) { g.fillStyle = b.roof; g.fillRect(px, py, TS, TS); g.fillStyle = '#0002'; g.fillRect(px, py + TS - 2, TS, 2); }
+        else { g.fillStyle = b.wall; g.fillRect(px, py, TS, TS);
+          if (ry === 2 && (x - b.x) % 2 === 1) { g.fillStyle = '#7fb8e6'; g.fillRect(px+3, py+3, 10, 8); g.fillStyle = '#fff6'; g.fillRect(px+4, py+4, 3, 2); } }
+        if (grid[y*W + x] === T.DOOR) { g.fillStyle = '#7a4a26'; g.fillRect(px+3, py+2, 10, 14); g.fillStyle = '#e8c25a'; g.fillRect(px+10, py+9, 2, 2); }
+      }
+      g.fillStyle = '#fff'; g.font = 'bold 7px monospace'; g.textAlign = 'center';
+      g.fillStyle = '#0006'; g.fillText(b.name, (b.x + b.w/2)*TS + 0.5, (b.y + 1)*TS + 4.5);
+      g.fillStyle = '#fff'; g.fillText(b.name, (b.x + b.w/2)*TS, (b.y + 1)*TS + 4);
+    }
+    return c;
+  }
+  return { TS, W, H, doors, blocked, render, spawn: role => { const b = buildings.find(b => b.id === role); return { x: (b.x + (b.w>>1))*TS + TS/2, y: (b.y + b.h + 1)*TS }; } };
+})();
+
+// ======================= MODUL: INPUT (keyboard + joystick) =======================
+const Input = (() => {
+  const keys = new Set(); let jx = 0, jy = 0, onAct = () => {};
+  addEventListener('keydown', e => { const k = e.key.toLowerCase();
+    if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
+    if ((k === 'e' || k === ' ' || k === 'enter') && !keys.has(k)) onAct(); keys.add(k); });
+  addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
+  addEventListener('blur', () => { keys.clear(); jx = jy = 0; });
+  const stick = $('stick'), knob = $('knob'); let tid = null, ox = 0, oy = 0;
+  const set = (cx, cy) => { let dx = cx - ox, dy = cy - oy; const R = 45, d = Math.hypot(dx, dy);
+    if (d > R) { dx *= R/d; dy *= R/d; } knob.style.transform = `translate(${dx}px,${dy}px)`;
+    const m = Math.min(1, Math.hypot(dx, dy) / R); const dead = m < 0.15;
+    jx = dead ? 0 : dx / R; jy = dead ? 0 : dy / R; };
+  stick.addEventListener('touchstart', e => { const t = e.changedTouches[0]; tid = t.identifier; const r = stick.getBoundingClientRect(); ox = r.left + r.width/2; oy = r.top + r.height/2; set(t.clientX, t.clientY); e.preventDefault(); }, { passive:false });
+  stick.addEventListener('touchmove', e => { for (const t of e.changedTouches) if (t.identifier === tid) set(t.clientX, t.clientY); e.preventDefault(); }, { passive:false });
+  const end = e => { for (const t of e.changedTouches) if (t.identifier === tid) { tid = null; jx = jy = 0; knob.style.transform = ''; } };
+  stick.addEventListener('touchend', end); stick.addEventListener('touchcancel', end);
+  let lastTap = 0; $('act').addEventListener('pointerdown', e => { e.preventDefault(); const n = performance.now(); if (n - lastTap > 250) { lastTap = n; onAct(); } });
+  return { setAction: f => onAct = f,
+    axis() { let x = jx, y = jy;
+      if (keys.has('arrowleft') || keys.has('a')) x -= 1; if (keys.has('arrowright') || keys.has('d')) x += 1;
+      if (keys.has('arrowup') || keys.has('w')) y -= 1; if (keys.has('arrowdown') || keys.has('s')) y += 1;
+      const m = Math.hypot(x, y); if (m > 1) { x /= m; y /= m; } return { x, y }; } };
+})();
+
+// ======================= MODUL: GAME (loop, gerak, kamera, render) =======================
+const Game = (() => {
+  const cv = $('cv'), ctx = cv.getContext('2d'); let worldImg = null, running = false, raf = 0, last = 0;
+  const SPEED = 62; // px dunia per detik
+  const me = { x:0, y:0, vx:0, vy:0, dir:'down', anim:0, moving:false, role:'florist', name:'Saya' };
+  const remote = { on:false, x:0, y:0, tx:0, ty:0, dir:'down', moving:false, anim:0, role:'mechanic', name:'Pemain', seen:0 };
+  const cam = { x:0, y:0 }; let scale = 3, vw = 0, vh = 0, nearDoor = null, hooks = {};
+  let lastSent = 0, lastSentMoving = false;
+
+  function resize() { const dpr = window.devicePixelRatio || 1, w = innerWidth, h = innerHeight;
+    cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+    scale = Math.max(2, Math.round(cv.width / 320)); vw = cv.width/scale; vh = cv.height/scale; ctx.imageSmoothingEnabled = false; }
+  addEventListener('resize', resize);
+
+  function step(dt) {
+    const a = Input.axis(); const k = 1 - Math.exp(-16*dt);
+    me.vx += (a.x*SPEED - me.vx)*k; me.vy += (a.y*SPEED - me.vy)*k;
+    if (Math.abs(me.vx) < 0.5 && a.x === 0) me.vx = 0; if (Math.abs(me.vy) < 0.5 && a.y === 0) me.vy = 0;
+    // Sumbu dipisah agar bisa meluncur di dinding; langkah dipecah agar tidak menembus
+    const n = Math.max(1, Math.ceil(Math.max(Math.abs(me.vx), Math.abs(me.vy))*dt / 2));
+    for (let i = 0; i < n; i++) {
+      const nx = me.x + me.vx*dt/n; if (!City.blocked(nx, me.y)) me.x = nx; else me.vx = 0;
+      const ny = me.y + me.vy*dt/n; if (!City.blocked(me.x, ny)) me.y = ny; else me.vy = 0;
+    }
+    me.moving = Math.hypot(me.vx, me.vy) > 4;
+    if (me.moving) { me.anim += dt*9; me.dir = Math.abs(me.vx) > Math.abs(me.vy) ? (me.vx > 0 ? 'right' : 'left') : (me.vy > 0 ? 'down' : 'up'); } else me.anim = 0;
+    // Pemain lain: interpolasi halus ke target jaringan
+    if (remote.on) { const d = Math.hypot(remote.tx - remote.x, remote.ty - remote.y);
+      if (d > 64) { remote.x = remote.tx; remote.y = remote.ty; } else { const kr = 1 - Math.exp(-12*dt); remote.x += (remote.tx - remote.x)*kr; remote.y += (remote.ty - remote.y)*kr; }
+      if (remote.moving) remote.anim += dt*9; else remote.anim = 0;
+      if (performance.now() - remote.seen > 4000) remote.on = false; }
+    // Kamera: interpolasi berbasis waktu + batas peta
+    const mw = City.W*City.TS, mh = City.H*City.TS;
+    let tx = me.x - vw/2, ty = me.y - 8 - vh/2;
+    tx = mw <= vw ? (mw - vw)/2 : clamp(tx, 0, mw - vw); ty = mh <= vh ? (mh - vh)/2 : clamp(ty, 0, mh - vh);
+    const kc = 1 - Math.exp(-7*dt); cam.x += (tx - cam.x)*kc; cam.y += (ty - cam.y)*kc;
+    // Pintu terdekat
+    nearDoor = null; let best = 20;
+    for (const d of City.doors) { const dd = Math.hypot(d.x - me.x, d.y - me.y); if (dd < best) { best = dd; nearDoor = d; } }
+    const p = $('prompt'); if (nearDoor) { p.textContent = 'AKSI: ' + nearDoor.name; p.classList.remove('hidden'); } else p.classList.add('hidden');
+    // Kirim posisi (~10 Hz saat bergerak, 1 Hz saat diam)
+    const now = performance.now();
+    if (hooks.send && (now - lastSent > (me.moving ? 100 : 1000) || (lastSentMoving && !me.moving))) {
+      lastSent = now; lastSentMoving = me.moving; hooks.send({ x:+me.x.toFixed(1), y:+me.y.toFixed(1), dir:me.dir, mv:me.moving }); }
+  }
+
+  function drawChar(c, x, y, label) {
+    const fr = Math.floor(c.anim) % 4, bob = c.moving ? (fr % 2 ? -1 : 0) : 0, leg = c.moving ? (fr % 2 ? 1 : -1) : 0;
+    const body = c.role === 'florist' ? '#e87aa6' : '#4a79c9', X = Math.round(x), Y = Math.round(y);
+    ctx.fillStyle = '#0003'; ctx.fillRect(X-5, Y-2, 10, 3);
+    ctx.fillStyle = '#3a2c3f'; ctx.fillRect(X-3, Y-3+(leg>0?0:-1), 2, 3); ctx.fillRect(X+1, Y-3+(leg>0?-1:0), 2, 3);
+    ctx.fillStyle = body; ctx.fillRect(X-4, Y-10+bob, 8, 7);
+    ctx.fillStyle = '#f2cfa5'; ctx.fillRect(X-3, Y-15+bob, 6, 5);
+    ctx.fillStyle = c.role === 'florist' ? '#7a3b2a' : '#2c2c3a'; ctx.fillRect(X-3, Y-16+bob, 6, 2);
+    ctx.fillStyle = '#222';
+    if (c.dir === 'down') { ctx.fillRect(X-2, Y-12+bob, 1, 1); ctx.fillRect(X+1, Y-12+bob, 1, 1); }
+    else if (c.dir === 'left') ctx.fillRect(X-3, Y-12+bob, 1, 1); else if (c.dir === 'right') ctx.fillRect(X+2, Y-12+bob, 1, 1);
+    else { ctx.fillStyle = c.role === 'florist' ? '#7a3b2a' : '#2c2c3a'; ctx.fillRect(X-3, Y-14+bob, 6, 2); }
+    ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center'; ctx.fillStyle = '#000a'; ctx.fillText(label, X+0.5, Y-19+0.5+bob); ctx.fillStyle = '#fff'; ctx.fillText(label, X, Y-19+bob);
+  }
+
+  function draw() {
+    ctx.setTransform(1,0,0,1,0,0); ctx.fillStyle = '#1d2033'; ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.setTransform(scale,0,0,scale, -Math.round(cam.x*scale), -Math.round(cam.y*scale)); ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(worldImg, 0, 0);
+    const list = [{ c:me, label:me.name }]; if (remote.on) list.push({ c:remote, label:remote.name });
+    list.sort((a, b) => a.c.y - b.c.y).forEach(o => drawChar(o.c, o.c.x, o.c.y, o.label));
+    // Penunjuk pemain lain di luar layar
+    ctx.setTransform(1,0,0,1,0,0);
+    if (remote.on) { const sx = (remote.x - cam.x)*scale, sy = (remote.y - 8 - cam.y)*scale, m = 28;
+      if (sx < 0 || sy < 0 || sx > cv.width || sy > cv.height) { const cx = cv.width/2, cy = cv.height/2, ang = Math.atan2(sy - cy, sx - cx);
+        const ex = clamp(sx, m, cv.width - m), ey = clamp(sy, m + 40, cv.height - m);
+        ctx.save(); ctx.translate(ex, ey); ctx.rotate(ang); ctx.fillStyle = '#f2c14e'; ctx.beginPath(); ctx.moveTo(14,0); ctx.lineTo(-8,-9); ctx.lineTo(-8,9); ctx.fill(); ctx.restore();
+        ctx.font = 'bold 12px monospace'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.fillText(remote.name, ex, ey - 16); } }
+    // Cahaya lembut (vignette ringan)
+    const g = ctx.createRadialGradient(cv.width/2, cv.height/2, Math.min(cv.width, cv.height)*0.45, cv.width/2, cv.height/2, Math.max(cv.width, cv.height)*0.75);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(10,10,30,.28)'); ctx.fillStyle = g; ctx.fillRect(0,0,cv.width,cv.height);
+  }
+
+  function frame(t) { if (!running) return; const dt = Math.min(0.05, (t - last)/1000 || 0.016); last = t; step(dt); draw(); raf = requestAnimationFrame(frame); }
+
+  Input.setAction(() => { if (!running) return; if (nearDoor) hooks.toast && hooks.toast(nearDoor.name + ': bagian dalam bangunan belum tersedia (dikerjakan di Tahap 5).'); else hooks.toast && hooks.toast('Tidak ada yang bisa diajak berinteraksi di sini.'); });
+
+  return {
+    start(opts) { hooks = opts.hooks; Object.assign(me, { role:opts.role, name:opts.name, x:opts.x, y:opts.y, vx:0, vy:0 });
+      remote.on = false; remote.role = opts.otherRole; remote.name = opts.otherName;
+      if (!worldImg) worldImg = City.render(); resize(); cam.x = me.x - vw/2; cam.y = me.y - vh/2;
+      running = true; last = performance.now(); raf = requestAnimationFrame(frame); },
+    stop() { running = false; cancelAnimationFrame(raf); },
+    getPos: () => ({ x:me.x, y:me.y }),
+    onRemote(p) { remote.tx = p.x; remote.ty = p.y; remote.dir = p.dir; remote.moving = !!p.mv; remote.seen = performance.now();
+      if (!remote.on) { remote.on = true; remote.x = p.x; remote.y = p.y; } },
+    setRemoteInfo(n, r) { remote.name = n; remote.role = r; },
+  };
+})();
+
+// ======================= MODUL: BACKEND (Supabase) + ALUR UI =======================
+const cfgOk = SUPABASE_URL.startsWith('https://') && !SUPABASE_URL.includes('GANTI');
+if (!cfgOk) { $('cfgwarn').classList.remove('hidden'); return; }
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let me = null, world = null, channel = null, beat = null, saveT = null, lastOnline = new Set(), members = [], names = {};
+
+const errText = e => (e && e.message && !/JWT|fetch|network|Failed/i.test(e.message)) ? e.message : 'Terjadi kesalahan. Periksa koneksi lalu coba lagi.';
+const setNet = ok => { $('net').innerHTML = `<span class="dot ${ok?'on':''}"></span>${ok?'Terhubung':'Terputus — mencoba menyambung…'}`; $('h-net').textContent = ok ? '' : 'TERPUTUS'; };
+addEventListener('online', () => setNet(true)); addEventListener('offline', () => setNet(false)); setNet(navigator.onLine);
+
+async function auth(kind) {
+  const email = $('a-email').value.trim(), password = $('a-pass').value, name = $('a-name').value.trim();
+  if (password.length < 8) return say('a-msg', 'Kata sandi minimal 8 karakter.');
+  if (kind === 'signup' && name.length < 2) return say('a-msg', 'Isi nama pemain (min. 2 karakter).');
+  const { data, error } = kind === 'signup'
+    ? await sb.auth.signUp({ email, password, options: { data: { display_name: name } } })
+    : await sb.auth.signInWithPassword({ email, password });
+  if (error) return say('a-msg', 'Gagal: ' + error.message);
+  if (kind === 'signup' && !data.session) say('a-msg', 'Pendaftaran berhasil. Cek email untuk konfirmasi, lalu masuk.', true);
+}
+$('b-login').onclick = () => auth('login'); $('b-signup').onclick = () => auth('signup'); $('b-logout').onclick = () => sb.auth.signOut();
+sb.auth.onAuthStateChange((_e, s) => { me = s ? s.user : null;
+  if (me) { $('who').textContent = me.user_metadata?.display_name || 'Pemain'; showMenu(); } else { leaveWorld(); showView('v-auth'); } });
+
+async function showMenu() {
+  leaveWorld(); showView('v-menu'); say('m-msg', '');
+  const { data, error } = await sb.from('world_members').select('role, character_role, joined_at, worlds(id, room_code)').order('joined_at', { ascending: false });
+  if (error) { $('worlds').textContent = 'Gagal memuat daftar dunia.'; return; }
+  $('worlds').innerHTML = data.length ? '' : 'Belum ada dunia.';
+  data.forEach(m => { const d = document.createElement('div'); d.className = 'm';
+    d.innerHTML = `<span>${esc(m.worlds.room_code)}<br><small>${ROLE[m.character_role]}${m.role==='host'?' · HOST':''}</small></span>`;
+    const b = document.createElement('button'); b.textContent = 'BUKA'; b.style.width = '90px'; b.onclick = () => openWorld(m.worlds.id); d.appendChild(b); $('worlds').appendChild(d); });
+}
+$('b-create').onclick = async () => { $('b-create').disabled = true;
+  const { data, error } = await sb.rpc('create_world', { p_character_role: $('c-role').value }); $('b-create').disabled = false;
+  if (error) return say('m-msg', errText(error)); openWorld(data.id); };
+$('b-join').onclick = async () => { const code = $('j-code').value.trim(); if (!code) return say('m-msg', 'Masukkan kode ruang.');
+  const { data, error } = await sb.rpc('join_world', { p_code: code }); if (error) return say('m-msg', errText(error)); openWorld(data.id); };
+$('b-back').onclick = showMenu;
+
+async function openWorld(id) {
+  const { data, error } = await sb.from('worlds').select('*').eq('id', id).single();
+  if (error) return say('m-msg', 'Dunia tidak dapat dibuka.');
+  leaveWorld(); world = data; showView('v-world'); $('w-code').textContent = world.room_code;
+  await loadMembers(); renderMembers();
+  sb.rpc('touch_presence', { p_world: id }); beat = setInterval(() => sb.rpc('touch_presence', { p_world: id }), 30000);
+  channel = sb.channel('world:' + id, { config: { presence: { key: me.id }, broadcast: { self: false } } })
+    .on('presence', { event: 'sync' }, () => { lastOnline = new Set(Object.keys(channel.presenceState())); renderMembers(); updateHud(); })
+    .on('broadcast', { event: 'pos' }, ({ payload }) => { if (payload && payload.id !== me.id) Game.onRemote(payload); })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'world_members', filter: 'world_id=eq.' + id }, async () => { await loadMembers(); renderMembers(); })
+    .subscribe(async s => { setNet(navigator.onLine && s !== 'CLOSED' && s !== 'CHANNEL_ERROR'); if (s === 'SUBSCRIBED') await channel.track({ at: Date.now() }); });
+}
+async function loadMembers() {
+  const { data: ms } = await sb.from('world_members').select('user_id, role, character_role').eq('world_id', world.id).order('slot');
+  const { data: ps } = await sb.from('profiles').select('id, display_name');
+  members = ms || []; names = Object.fromEntries((ps || []).map(p => [p.id, p.display_name]));
+}
+function renderMembers() {
+  $('w-members').innerHTML = members.map(m => `<div class="m"><span><span class="dot ${lastOnline.has(m.user_id)?'on':''}"></span>${esc(names[m.user_id]||'Pemain')} ${m.user_id===me.id?'(Anda)':''}<br><small>${ROLE[m.character_role]}</small></span>${m.role==='host'?'<span class="tag">HOST</span>':''}</div>`).join('');
+  const hostOnline = members.some(m => m.role==='host' && lastOnline.has(m.user_id));
+  $('w-wait').className = 'msg'; $('w-wait').textContent = members.length < 2 ? 'Menunggu pemain kedua bergabung dengan kode ruang.' : !hostOnline ? 'Menunggu host untuk melanjutkan cerita utama.' : 'Kedua pemain siap.';
+}
+function updateHud() {
+  const other = members.find(m => m.user_id !== me.id), mine = members.find(m => m.user_id === me.id); if (!mine) return;
+  $('h-info').innerHTML = `${esc(world.room_code)}${mine.role==='host'?' · HOST':''}<br>${other ? esc(names[other.user_id]||'Pemain') + (lastOnline.has(other.user_id) ? ' · online' : ' · offline') : 'Menunggu pemain kedua'}`;
+}
+
+let toastT = 0;
+function toast(t) { const el = $('toast'); el.textContent = t; el.classList.remove('hidden'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.add('hidden'), 3000); }
+
+// ---- Masuk kota: posisi dimuat dari database, disimpan berkala ----
+$('b-play').onclick = async () => {
+  const mine = members.find(m => m.user_id === me.id); if (!mine) return;
+  const other = members.find(m => m.user_id !== me.id);
+  const { data: cs } = await sb.from('character_states').select('x, y').eq('world_id', world.id).eq('user_id', me.id).single();
+  const sp = City.spawn(mine.character_role);
+  const pos = (cs && (cs.x || cs.y)) ? { x: cs.x, y: cs.y } : sp;
+  if (pos.x < 16 || pos.y < 16 || pos.x > (City.W-1)*City.TS || pos.y > (City.H-1)*City.TS) { pos.x = sp.x; pos.y = sp.y; } // data posisi tidak masuk akal
+  $('ui').classList.add('hidden'); $('game').classList.remove('hidden'); updateHud();
+  Game.start({ role: mine.character_role, name: names[me.id] || 'Saya', x: pos.x, y: pos.y,
+    otherRole: other ? other.character_role : 'mechanic', otherName: other ? (names[other.user_id] || 'Pemain') : 'Pemain',
+    hooks: { toast, send: p => { if (channel) channel.send({ type:'broadcast', event:'pos', payload: { id: me.id, ...p } }); } } });
+  let lastSaved = '';
+  saveT = setInterval(savePos, 5000);
+  async function savePos() { const p = Game.getPos(), k = Math.round(p.x) + ',' + Math.round(p.y); if (k === lastSaved) return; lastSaved = k;
+    const { error } = await sb.from('character_states').update({ x: p.x, y: p.y, updated_at: new Date().toISOString() }).eq('world_id', world.id).eq('user_id', me.id);
+    if (error) lastSaved = ''; }
+  window.__savePos = savePos;
+};
+function exitGame() { if (window.__savePos) window.__savePos(); Game.stop(); clearInterval(saveT); $('game').classList.add('hidden'); $('ui').classList.remove('hidden'); }
+$('g-menu').onclick = () => { exitGame(); };
+addEventListener('pagehide', () => { if (window.__savePos && world) window.__savePos(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && window.__savePos && world) window.__savePos(); });
+
+function leaveWorld() {
+  if (!$('game').classList.contains('hidden')) exitGame();
+  if (channel) { sb.removeChannel(channel); channel = null; } if (beat) { clearInterval(beat); beat = null; }
+  world = null; lastOnline = new Set(); members = []; window.__savePos = null;
+}
+})();
+</script>
+</body>
+</html>
