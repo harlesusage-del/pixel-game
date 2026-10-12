@@ -1,0 +1,113 @@
+/* PIXEL LIFE — tampilan. Font: Press Start 2P (judul) + VT323 (teks). Ada cadangan monospace bila offline. */
+:root{
+  --ink:#1d2033; --panel:#2b3050; --panel2:#353b63; --gold:#f2c14e; --gold2:#c9972a;
+  --txt:#f4efe6; --mut:#a9aecb; --ok:#6fcf97; --bad:#eb6b6b; --sky1:#7cc8f2; --sky2:#d6f1ff;
+  --h:'Press Start 2P','Courier New',monospace; --b:'VT323','Courier New',monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;color:var(--txt);font:20px/1.25 var(--b);overscroll-behavior:none}
+body{background:linear-gradient(#5aa9e0 0%,var(--sky1) 35%,var(--sky2) 70%,#b9e5a0 70%);background-attachment:fixed}
+.hidden{display:none!important}
+
+/* ---------- Latar judul: awan & tanah pixel ---------- */
+.sky{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.cloud{position:absolute;width:8px;height:8px;background:#fff;opacity:.9;
+  box-shadow:8px 0 #fff,16px 0 #fff,24px 0 #fff,32px 0 #fff,40px 0 #fff,-8px 8px #fff,0 8px #fff,8px 8px #fff,16px 8px #fff,24px 8px #fff,32px 8px #fff,40px 8px #fff,48px 8px #fff,8px -8px #fff,16px -8px #fff,24px -8px #fff;
+  animation:drift 70s linear infinite}
+.c1{top:12%;left:-80px;transform:scale(1.4)} .c2{top:26%;left:-80px;animation-duration:95s;animation-delay:-40s;transform:scale(1)} .c3{top:7%;left:-80px;animation-duration:120s;animation-delay:-80s;transform:scale(.8)}
+@keyframes drift{to{left:110%}}
+.ground{position:fixed;left:0;right:0;bottom:0;height:34%;z-index:0;pointer-events:none;
+  background:
+   linear-gradient(#4f9d4f 0 12px,transparent 12px),
+   repeating-linear-gradient(90deg,#63b35e 0 16px,#5fae5a 16px 32px);
+  border-top:4px solid #3d8a3d}
+.houses{position:fixed;left:0;right:0;bottom:calc(34% - 4px);height:70px;z-index:0;pointer-events:none;
+  background:
+   linear-gradient(#e87aa6,#e87aa6) 8% 100%/54px 22px no-repeat, linear-gradient(#f3d9e3,#f3d9e3) 8% 100%/54px 44px no-repeat,
+   linear-gradient(#4a79c9,#4a79c9) 78% 100%/66px 22px no-repeat, linear-gradient(#c9d3e6,#c9d3e6) 78% 100%/66px 40px no-repeat,
+   linear-gradient(#c9574f,#c9574f) 46% 100%/44px 18px no-repeat, linear-gradient(#efe0cf,#efe0cf) 46% 100%/44px 34px no-repeat;
+  opacity:.9}
+
+/* ---------- Panel & tombol bergaya pixel ---------- */
+main{position:relative;z-index:1;max-width:520px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 14px 40px}
+h1{font:14px/1.6 var(--h);margin:0;color:#fff;text-shadow:3px 3px 0 #1d2033,-1px -1px 0 #1d2033,1px -1px 0 #1d2033,-1px 1px 0 #1d2033;letter-spacing:1px;text-align:center}
+h1 small{display:block;font-size:9px;color:var(--gold);margin-top:6px}
+.slogan{color:#1d2033;margin:8px 0 14px;font-size:20px;text-align:center;text-shadow:1px 1px 0 #fff8}
+.panel{position:relative;background:var(--panel);margin:0 4px 20px;padding:16px;
+  box-shadow:0 -4px 0 0 var(--gold),0 4px 0 0 var(--gold),-4px 0 0 0 var(--gold),4px 0 0 0 var(--gold),0 8px 0 4px #0006;
+  animation:pop .25s ease-out both}
+@keyframes pop{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+h2{font:11px/1.6 var(--h);margin:0 0 12px;color:var(--gold)}
+input,select,button{font:inherit;font-size:21px;width:100%;padding:10px 12px;margin:6px 0;min-height:48px;color:var(--txt);background:var(--ink);border:0;border-radius:0;
+  box-shadow:inset 3px 3px 0 #0007,inset -3px -3px 0 #fff1}
+input:focus,select:focus{outline:3px solid var(--gold)}
+button{font-family:var(--h);font-size:10px;line-height:1.5;text-transform:uppercase;cursor:pointer;color:#1d2033;background:var(--gold);
+  box-shadow:inset -4px -4px 0 var(--gold2),inset 4px 4px 0 #fff6,0 4px 0 #0007;transition:transform .05s}
+button:hover{filter:brightness(1.08)} button:active{transform:translateY(3px);box-shadow:inset -4px -4px 0 var(--gold2),inset 4px 4px 0 #fff6,0 1px 0 #0007}
+button.sec{color:var(--txt);background:var(--panel2);box-shadow:inset -4px -4px 0 #1d2033aa,inset 4px 4px 0 #fff2,0 4px 0 #0007}
+button:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.msg{min-height:24px;font-size:20px}.err{color:var(--bad)}.good{color:var(--ok)}
+.code{font:15px/1.4 var(--h);text-align:center;background:var(--ink);padding:14px 6px;color:var(--gold);border:3px dashed var(--gold);user-select:all;letter-spacing:1px}
+.m{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:2px dashed #fff2;gap:8px}
+.m small{color:var(--mut);font-size:18px}
+.tag{font:8px var(--h);padding:4px 6px;background:var(--gold);color:var(--ink)}
+.dot{display:inline-block;width:10px;height:10px;margin-right:6px;background:var(--mut)}.dot.on{background:var(--ok);box-shadow:0 0 6px var(--ok)}
+.status{font-size:18px;color:#1d2033;display:flex;justify-content:space-between;padding:0 6px;margin-bottom:14px}
+
+/* ---------- Dalam permainan ---------- */
+#game{position:fixed;inset:0;background:#000;touch-action:none;user-select:none;-webkit-user-select:none;z-index:10}
+#cv{width:100%;height:100%;display:block;image-rendering:pixelated}
+.hud{position:absolute;left:0;right:0;top:0;padding:calc(8px + env(safe-area-inset-top)) 10px 0;display:flex;justify-content:space-between;gap:8px;pointer-events:none;font-size:18px}
+.hud>div{background:#1d2033dd;padding:5px 9px;pointer-events:auto;box-shadow:0 -2px 0 0 var(--gold),0 2px 0 0 var(--gold),-2px 0 0 0 var(--gold),2px 0 0 0 var(--gold)}
+.hud button{width:auto;min-height:36px;padding:6px 9px;margin:0;font-size:8px;position:relative}
+#g-journal .badge{position:absolute;right:-6px;top:-8px;background:var(--bad);color:#fff;font:8px var(--h);padding:3px 5px}
+#goal{position:absolute;left:12px;right:12px;top:calc(66px + env(safe-area-inset-top));max-width:430px;background:#1d2033e6;padding:6px 10px;font-size:19px;pointer-events:none;
+  box-shadow:0 -2px 0 0 var(--ok),0 2px 0 0 var(--ok),-2px 0 0 0 var(--ok),2px 0 0 0 var(--ok)}
+#goal b{color:var(--ok);font-family:var(--h);font-size:8px;display:block;margin-bottom:2px}
+#stick{position:absolute;left:calc(18px + env(safe-area-inset-left));bottom:calc(24px + env(safe-area-inset-bottom));width:124px;height:124px;border-radius:50%;background:#ffffff18;border:4px solid #f2c14e88}
+#knob{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:50%;background:#f2c14ecc;box-shadow:inset -4px -4px 0 #c9972a}
+#act{position:absolute;right:calc(22px + env(safe-area-inset-right));bottom:calc(40px + env(safe-area-inset-bottom));width:88px;height:88px;border-radius:50%;margin:0;padding:0;font-size:11px}
+#toasts{position:absolute;left:50%;top:calc(130px + env(safe-area-inset-top));transform:translateX(-50%);width:min(92%,460px);display:flex;flex-direction:column;gap:6px;pointer-events:none;z-index:4}
+.toast{background:#1d2033f2;padding:8px 12px;font-size:19px;text-align:center;animation:tin .25s ease-out both;
+  box-shadow:0 -3px 0 0 var(--gold),0 3px 0 0 var(--gold),-3px 0 0 0 var(--gold),3px 0 0 0 var(--gold)}
+.toast.out{animation:tout .4s ease-in both}
+@keyframes tin{from{transform:translateY(-10px);opacity:0}to{transform:none;opacity:1}} @keyframes tout{to{transform:translateY(-8px);opacity:0}}
+#prompt{position:absolute;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#1d2033f2;padding:5px 12px;font-size:20px;pointer-events:none;white-space:nowrap;
+  box-shadow:0 -3px 0 0 var(--ok),0 3px 0 0 var(--ok),-3px 0 0 0 var(--ok),3px 0 0 0 var(--ok)}
+#dlg{position:absolute;left:12px;right:12px;bottom:calc(160px + env(safe-area-inset-bottom));max-width:580px;margin:0 auto;background:#1d2033f7;padding:12px 16px;cursor:pointer;
+  box-shadow:0 -4px 0 0 var(--gold),0 4px 0 0 var(--gold),-4px 0 0 0 var(--gold),4px 0 0 0 var(--gold),0 8px 0 4px #0006}
+#dlg-name{color:var(--gold);font:10px var(--h);margin-bottom:8px}
+#dlg-text{font-size:23px;line-height:1.2}
+#dlg-hint{color:var(--mut);font-size:17px;text-align:right;margin-top:4px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
+
+/* ---------- Jendela: panduan, jurnal, keputusan ---------- */
+.overlay{position:absolute;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;padding:12px;z-index:6}
+.box{background:var(--panel);padding:16px;width:min(100%,520px);max-height:100%;overflow:auto;font-size:21px;
+  box-shadow:0 -4px 0 0 var(--gold),0 4px 0 0 var(--gold),-4px 0 0 0 var(--gold),4px 0 0 0 var(--gold),0 8px 0 4px #0006}
+.box p{margin:8px 0}.box b{color:var(--gold)}
+#j-tabs{display:flex;gap:6px;margin-bottom:10px}#j-tabs button{margin:0;min-height:40px;font-size:8px;background:var(--panel2);color:var(--txt)}#j-tabs button.on{background:var(--gold);color:var(--ink)}
+.jch{font:11px/1.5 var(--h);color:var(--gold)} .jsub{color:var(--mut);margin:4px 0 8px}
+.bar{height:14px;background:var(--ink);margin:6px 0 12px;box-shadow:inset 2px 2px 0 #0008}.bar i{display:block;height:100%;background:var(--ok)}
+.cat{font:9px var(--h);color:var(--mut);margin:14px 0 6px}
+.q{background:var(--ink);padding:10px 12px;margin-bottom:8px;border-left:6px solid var(--mut)}
+.q.s-BERLANGSUNG{border-color:var(--gold)}.q.s-SELESAI{border-color:var(--ok);opacity:.85}.q.s-TERKUNCI{opacity:.5}.q.s-TERSEDIA{border-color:#7fb8e6}
+.q h3{font:9px/1.6 var(--h);margin:0 0 4px;color:var(--txt)} .q .st{font:8px var(--h);float:right;color:var(--mut)}
+.q.s-BERLANGSUNG .st{color:var(--gold)}.q.s-SELESAI .st{color:var(--ok)}
+.q p{margin:2px 0;font-size:19px;color:var(--mut)} .q li{list-style:none;font-size:20px;margin-left:-26px} .q li.d{color:var(--ok);text-decoration:line-through}
+.logline{padding:6px 0;border-bottom:2px dashed #fff2;font-size:19px}
+.opt{display:block;text-align:left;margin:8px 0;font-size:10px}.opt small{display:block;font-family:var(--b);font-size:19px;text-transform:none;opacity:.85;margin-top:4px}
+
+/* ---------- Kartu chapter ---------- */
+#chcard{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000c;z-index:7;text-align:center;padding:20px;pointer-events:none;animation:ch 4.2s ease both}
+#chcard .n{font:11px var(--h);color:var(--gold);margin-bottom:12px} #chcard .t{font:17px/1.6 var(--h);color:#fff;margin-bottom:12px;text-shadow:3px 3px 0 #000} #chcard .s{font-size:22px;color:var(--mut);max-width:420px}
+@keyframes ch{0%{opacity:0}12%{opacity:1}80%{opacity:1}100%{opacity:0}}
+@media (hover:hover) and (pointer:fine){#stick{display:none}}
+@media (max-width:380px){h1{font-size:12px}button{font-size:9px}}
+@media (prefers-reduced-motion:reduce){.cloud{animation:none}.panel,.toast{animation:none}}
+
+/* ---------- Keuangan ---------- */
+#e-tabs{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap}#e-tabs button{margin:0;min-height:38px;flex:1;font-size:7px;padding:4px;background:var(--panel2);color:var(--txt)}#e-tabs button.on{background:var(--gold);color:var(--ink)}
+.big{font:16px/1.4 var(--h);color:var(--ok);margin:4px 0 10px}.mut{color:var(--mut)}
+#econ input[type=number]{margin:4px 0}
