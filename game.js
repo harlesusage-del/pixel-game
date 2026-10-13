@@ -294,7 +294,7 @@ const Scenes = (() => {
 // ======================= MODUL: ANTARMUKA CERITA (jurnal, pesan, kartu chapter, keputusan) =======================
 const Guide = (() => {
   const ls = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
-  const OVERLAYS = ['tut', 'journal', 'decision', 'econ'];
+  const OVERLAYS = ['tut', 'journal', 'decision', 'econ', 'gmenu'];
   const tutOpen = () => OVERLAYS.some(id => !$(id).classList.contains('hidden'));
   let tab = 'misi', started = false, picked = null, cardT = 0, unread = false;
 
@@ -327,8 +327,13 @@ const Guide = (() => {
     } else h += v.log.length ? v.log.map(l => `<div class="logline">${esc(l.text)}</div>`).join('') : '<p>Belum ada pesan.</p>';
     $('j-body').innerHTML = h; const b = $('j-decide'); if (b) b.onclick = openDecision;
   }
-  function openJournal() { unread = false; $('j-badge').classList.add('hidden'); renderJournal(); $('journal').classList.remove('hidden'); }
-  $('g-journal').onclick = openJournal; $('j-close').onclick = () => $('journal').classList.add('hidden');
+  function openJournal() { unread = false; $('j-badge').classList.add('hidden'); $('m-badge').classList.add('hidden'); renderJournal(); $('journal').classList.remove('hidden'); }
+  $('g-journal').onclick = openJournal; $('j-close').onclick = () => $('journal').classList.add('hidden'); $('goal').onclick = openJournal;
+  $('g-hamb').onclick = () => $('gmenu').classList.remove('hidden'); $('gm-close').onclick = () => $('gmenu').classList.add('hidden');
+  $('gmenu').addEventListener('click', e => { if (e.target === $('gmenu') || e.target.closest('.mgrid button')) $('gmenu').classList.add('hidden'); });
+  addEventListener('keydown', e => { if ($('game').classList.contains('hidden') || /INPUT|SELECT|TEXTAREA/.test(e.target.tagName || '')) return; const k = e.key.toLowerCase();
+    if (k === 'escape') { ['tut', 'journal', 'econ', 'gmenu'].forEach(id => $(id).classList.add('hidden')); }
+    else if (k === 'j') openJournal(); else if (k === 'u') Econ.open('saldo'); else if (k === 'm') $('gmenu').classList.toggle('hidden'); });
   document.querySelectorAll('#j-tabs button').forEach(b => b.onclick = () => { tab = b.dataset.t; renderJournal(); });
   $('g-help').onclick = () => $('tut').classList.remove('hidden');
   $('tut-ok').onclick = () => { $('tut').classList.add('hidden'); ls.set('pl_tut_seen', '1'); };
@@ -346,7 +351,7 @@ const Guide = (() => {
     $('d-opts').classList.remove('hidden'); $('decision').classList.remove('hidden'); }
   $('d-cancel').onclick = () => { $('decision').classList.add('hidden'); $('d-opts').classList.remove('hidden'); };
 
-  const cbs = { msg: t => { toast(t); if ($('journal').classList.contains('hidden')) { unread = true; $('j-badge').classList.remove('hidden'); } },
+  const cbs = { msg: t => { toast(t); if ($('journal').classList.contains('hidden')) { unread = true; $('j-badge').classList.remove('hidden'); $('m-badge').classList.remove('hidden'); } },
     change: () => { refreshGoal(); if (!$('journal').classList.contains('hidden')) renderJournal(); },
     decision: () => setTimeout(openDecision, 1800), chapterCard: n => setTimeout(() => card(n), 1200), dayCard: n => setTimeout(() => dayCard(n), 900) };
 
@@ -395,14 +400,17 @@ const Game = (() => {
   const cam = { x:0, y:0 }; let scale = 3, vw = 0, vh = 0, hooks = {}, scene = Scenes.city, outPos = { x:0, y:0 }, near = null;
   const dwell = {}; let socialT = 0, lastSent = 0, lastSentMoving = false, trans = null, dialog = null, cd = 0, whereTxt = '';
 
+  let zoomK = (() => { try { return Number(localStorage.getItem('pl_zoom')) || 1; } catch (e) { return 1; } })(), baseScale = 3;
+  // Layar penuh: skala dihitung dari ukuran CSS layar (bukan piksel perangkat) agar HP tidak jadi mungil. ~11 petak pada sisi terpendek.
+  function applyScale() { let sc = baseScale; if (scene && scene.id !== 'kota') sc = Math.max(baseScale, Math.floor(Math.min(cv.width / (scene.W*TS), cv.height / (scene.H*TS)))); scale = Math.max(2, sc); vw = cv.width/scale; vh = cv.height/scale; }
   function resize() { const dpr = window.devicePixelRatio || 1; cv.width = Math.round(innerWidth*dpr); cv.height = Math.round(innerHeight*dpr);
-    scale = Math.max(2, Math.round(cv.width / 320)); vw = cv.width/scale; vh = cv.height/scale; ctx.imageSmoothingEnabled = false; }
-  addEventListener('resize', resize);
+    const css = clamp(Math.min(innerWidth, innerHeight) / 176 * zoomK, 1.6, 10); baseScale = Math.max(2, Math.round(css * dpr)); applyScale(); ctx.imageSmoothingEnabled = false; }
+  addEventListener('resize', resize); addEventListener('orientationchange', () => setTimeout(resize, 250)); if (window.visualViewport) visualViewport.addEventListener('resize', resize);
   const camTarget = () => { const mw = scene.W*TS, mh = scene.H*TS; let tx = me.x - vw/2, ty = me.y - 8 - vh/2;
     tx = mw <= vw ? (mw - vw)/2 : clamp(tx, 0, mw - vw); ty = mh <= vh ? (mh - vh)/2 : clamp(ty, 0, mh - vh); return { tx, ty }; };
   const snapCam = () => { const t = camTarget(); cam.x = t.tx; cam.y = t.ty; };
 
-  function setScene(s) { scene = s; if (!s.img && s.render) s.img = s.render(); snapCam(); cd = 0.7; lastSent = 0; }
+  function setScene(s) { scene = s; if (!s.img && s.render) s.img = s.render(); applyScale(); snapCam(); cd = 0.7; lastSent = 0; }
   const fadeTo = fn => { if (!trans) trans = { phase:'out', t:0, fn }; };
   function canEnter(d) {
     if (d.id !== 'school') return true;
@@ -436,6 +444,9 @@ const Game = (() => {
     if (near) near.run();
   }
   Input.setAction(act);
+  const setZoom = k => { zoomK = clamp(k, 0.7, 1.7); try { localStorage.setItem('pl_zoom', String(zoomK)); } catch (e) {} resize(); snapCam(); hooks.toast && hooks.toast('Zoom: ' + Math.round(zoomK*100) + '%'); };
+  $('g-zin').onclick = () => setZoom(zoomK * 1.18); $('g-zout').onclick = () => setZoom(zoomK / 1.18);
+  $('g-full').onclick = () => { const el = document.documentElement; if (!document.fullscreenElement) { if (el.requestFullscreen) el.requestFullscreen().catch(() => {}); else hooks.toast && hooks.toast('Browser ini belum mendukung layar penuh. Di iPhone: Bagikan → Tambah ke Layar Utama agar tampil penuh.'); } else if (document.exitFullscreen) document.exitFullscreen(); };
   $('g-fx').onclick = () => { fxOn = !fxOn; try { localStorage.setItem('pl_fx', fxOn ? '1' : '0'); } catch (e) {} hooks.toast && hooks.toast('Efek visual: ' + (fxOn ? 'AKTIF' : 'MODE RINGAN')); };
 
   function greet() { if (hooks.sendGreet) hooks.sendGreet({ name:me.name }); Story.greet(); hooks.toast('Kamu menyapa ' + remote.name + '. 👋'); }
@@ -533,7 +544,7 @@ const Game = (() => {
   const glowWarm = mkGlow(255, 214, 130);
   let fxOn = (() => { try { return localStorage.getItem('pl_fx') !== '0'; } catch (e) { return true; } })();
   const parts = [], rainDrops = []; let spawnT = 0, clockT = 0, slowN = 0;
-  function updateClock() { const m = clockMin(), h = Math.floor(m / 60), mi = Math.floor(m % 60); $('h-clock').textContent = (isRain() && scene.id === 'kota' ? '🌧 ' : daylight(m) < 0.3 ? '🌙 ' : '☀ ') + String(h).padStart(2, '0') + ':' + String(mi).padStart(2, '0'); }
+  function updateClock() { $('h-day').textContent = ' · Hari ' + Story.day(); const m = clockMin(), h = Math.floor(m / 60), mi = Math.floor(m % 60); $('h-clock').textContent = (isRain() && scene.id === 'kota' ? '🌧 ' : daylight(m) < 0.3 ? '🌙 ' : '☀ ') + String(h).padStart(2, '0') + ':' + String(mi).padStart(2, '0'); }
   function updateFx(dt) {
     if (scene.id !== 'kota' || !fxOn) { if (parts.length) parts.length = 0; return; }
     const lt = daylight(clockMin()), n = 1 - lt, rain = isRain(); spawnT -= dt;
@@ -568,7 +579,7 @@ const Game = (() => {
   }
 
   function draw() {
-    ctx.setTransform(1,0,0,1,0,0); ctx.fillStyle = '#1d2033'; ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.setTransform(1,0,0,1,0,0); ctx.fillStyle = scene.id === 'kota' ? '#1d2033' : '#120f1c'; ctx.fillRect(0,0,cv.width,cv.height);
     ctx.setTransform(scale,0,0,scale, -Math.round(cam.x*scale), -Math.round(cam.y*scale)); ctx.imageSmoothingEnabled = false;
     ctx.drawImage(scene.img, 0, 0); if (scene.animate) scene.animate(ctx, now);
     for (const o of Story.objects(scene.id)) { const ox = Math.round(o.x), oy = Math.round(o.y), bb = Math.sin(now/300)*1.5; ctx.fillStyle = '#0003'; ctx.fillRect(ox-5, oy-1, 10, 3); ctx.fillStyle = '#a0693d'; ctx.fillRect(ox-5, oy-7, 10, 7); ctx.fillStyle = '#c88f5a'; ctx.fillRect(ox-5, oy-7, 10, 2); ctx.fillStyle = '#7d5430'; ctx.fillRect(ox-3, oy-10, 6, 3); ctx.fillStyle = '#fff'; ctx.fillRect(ox+6, Math.round(oy-12+bb), 2, 2); }
@@ -686,6 +697,7 @@ function renderMembers() {
 }
 function updateHud() {
   const other = members.find(m => m.user_id !== me.id), mine = members.find(m => m.user_id === me.id); if (!mine) return;
+  $('h-pn').textContent = other ? ((lastOnline.has(other.user_id) ? '● ' : '○ ') + (names[other.user_id] || 'Pemain')) : '';
   $('h-i1').innerHTML = `${esc(world.room_code)}${mine.role==='host'?' · HOST':''}<br>${other ? esc(names[other.user_id]||'Pemain') + (lastOnline.has(other.user_id) ? ' · online' : ' · offline') : 'Menunggu pemain kedua'}`;
 }
 

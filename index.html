@@ -2,6 +2,9 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1d2033">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>PIXEL LIFE: TWO SHOPS, ONE LIFE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -52,8 +55,8 @@
 <div id="game" class="hidden">
   <canvas id="cv"></canvas>
   <div class="hud">
-    <div id="h-info"><span id="h-i1">—</span><br><span id="h-where"></span><br><span id="h-clock"></span></div>
-    <div style="display:flex;gap:6px;align-items:center"><span id="h-net"></span><button id="g-fx" class="sec">FX</button><button id="g-econ">UANG</button><button id="g-journal">MISI<span class="badge hidden" id="j-badge">!</span></button><button id="g-help" class="sec">?</button><button id="g-menu" class="sec">LOBI</button></div>
+    <div id="h-info"><span id="h-clock"></span><span id="h-day"></span><br><span id="h-pn"></span> <span id="h-where"></span></div>
+    <div class="hr"><span id="h-net"></span><button id="g-hamb" aria-label="Menu">☰<span class="badge hidden" id="m-badge">!</span></button></div>
   </div>
   <div id="goal"></div>
   <div id="toasts"></div>
@@ -69,7 +72,8 @@
     <p><b>Bergerak:</b> W A S D / panah. Di HP pakai joystick kiri bawah.</p>
     <p><b>Aksi:</b> E / Spasi, atau tombol AKSI. Untuk mengobrol, memeriksa benda, mengambil barang, dan menyapa pasanganmu.</p>
     <p><b>Masuk bangunan:</b> jalan ke pintu. <b>Keluar:</b> jalan ke karpet "KELUAR".</p>
-    <p><b>MISI:</b> tombol MISI membuka jurnal (misi, cerita, pesan). Kotak hijau di kiri atas menunjukkan langkah berikutnya, dan panah kuning menunjuk tujuannya.</p>
+    <p><b>Menu:</b> tombol <b>☰</b> di pojok kanan atas membuka info lengkap (kode ruang, pasangan, jam) dan semua tombol: MISI, UANG, PANDUAN, EFEK, ZOOM, LAYAR PENUH, LOBI. Di laptop: J = misi, U = uang, M = menu, Esc = tutup.</p>
+    <p><b>MISI:</b> kotak hijau di kiri atas menunjukkan langkah berikutnya (ketuk untuk membuka jurnal). Tombol MISI membuka jurnal (misi, cerita, pesan). Kotak hijau di kiri atas menunjukkan langkah berikutnya, dan panah kuning menunjuk tujuannya.</p>
     <p><b>Efek visual:</b> siang-malam, hujan, kelopak bunga, dan kunang-kunang. Tombol <b>FX</b> mengaktifkan atau mematikannya (mode ringan untuk HP lambat).</p>
     <p><b>Hari:</b> cerita berjalan per hari. Setelah semua misi wajib hari itu selesai, pulang ke Rumah dan tidur di <b>Tempat Tidur</b> untuk lanjut ke hari berikutnya.</p>
     <p><b>Host:</b> pembuat dunia menentukan pilihan cerita utama di akhir chapter.</p>
@@ -86,6 +90,17 @@
   <div id="econ" class="overlay hidden"><div class="box">
     <div id="e-tabs"></div><div id="e-body"></div><div id="e-msg" class="msg"></div>
     <button id="e-close" class="sec">TUTUP</button>
+  </div></div>
+
+  <div id="gmenu" class="overlay hidden"><div class="box">
+    <div id="h-i1" class="info">—</div>
+    <div class="mgrid">
+      <button id="g-journal">MISI<span class="badge hidden" id="j-badge">!</span></button><button id="g-econ">UANG</button>
+      <button id="g-help" class="sec">PANDUAN</button><button id="g-fx" class="sec">EFEK (FX)</button>
+      <button id="g-zout" class="sec">ZOOM −</button><button id="g-zin" class="sec">ZOOM +</button>
+      <button id="g-full" class="sec">LAYAR PENUH</button><button id="g-menu" class="sec">KE LOBI</button>
+    </div>
+    <button id="gm-close" class="sec">TUTUP</button>
   </div></div>
 
   <div id="decision" class="overlay hidden"><div class="box">
