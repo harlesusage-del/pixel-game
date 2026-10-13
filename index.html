@@ -52,8 +52,8 @@
 <div id="game" class="hidden">
   <canvas id="cv"></canvas>
   <div class="hud">
-    <div id="h-info"><span id="h-i1">—</span><br><span id="h-where"></span></div>
-    <div style="display:flex;gap:6px;align-items:center"><span id="h-net"></span><button id="g-econ">UANG</button><button id="g-journal">MISI<span class="badge hidden" id="j-badge">!</span></button><button id="g-help" class="sec">?</button><button id="g-menu" class="sec">LOBI</button></div>
+    <div id="h-info"><span id="h-i1">—</span><br><span id="h-where"></span><br><span id="h-clock"></span></div>
+    <div style="display:flex;gap:6px;align-items:center"><span id="h-net"></span><button id="g-fx" class="sec">FX</button><button id="g-econ">UANG</button><button id="g-journal">MISI<span class="badge hidden" id="j-badge">!</span></button><button id="g-help" class="sec">?</button><button id="g-menu" class="sec">LOBI</button></div>
   </div>
   <div id="goal"></div>
   <div id="toasts"></div>
@@ -70,6 +70,8 @@
     <p><b>Aksi:</b> E / Spasi, atau tombol AKSI. Untuk mengobrol, memeriksa benda, mengambil barang, dan menyapa pasanganmu.</p>
     <p><b>Masuk bangunan:</b> jalan ke pintu. <b>Keluar:</b> jalan ke karpet "KELUAR".</p>
     <p><b>MISI:</b> tombol MISI membuka jurnal (misi, cerita, pesan). Kotak hijau di kiri atas menunjukkan langkah berikutnya, dan panah kuning menunjuk tujuannya.</p>
+    <p><b>Efek visual:</b> siang-malam, hujan, kelopak bunga, dan kunang-kunang. Tombol <b>FX</b> mengaktifkan atau mematikannya (mode ringan untuk HP lambat).</p>
+    <p><b>Hari:</b> cerita berjalan per hari. Setelah semua misi wajib hari itu selesai, pulang ke Rumah dan tidur di <b>Tempat Tidur</b> untuk lanjut ke hari berikutnya.</p>
     <p><b>Host:</b> pembuat dunia menentukan pilihan cerita utama di akhir chapter.</p>
     <p><b>UANG:</b> tombol UANG membuka saldo, pinjaman antarpemain, riwayat, dan reset dunia. Bisnis dikerjakan di meja kerja dalam tempat usahamu (Meja Rangkai / Meja Kerja).</p>
     <button id="tut-ok">MENGERTI</button>

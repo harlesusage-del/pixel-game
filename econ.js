@@ -7,12 +7,12 @@ const Econ = (() => {
   const uid4 = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(16).slice(2));
   const CAT = { florist:{ mawar:['Mawar',8], tulip:['Tulip',7], lili:['Lili',10], pita:['Pita',4], kertas:['Kertas pembungkus',5] },
                 mechanic:{ busi:['Busi',9], kampas:['Kampas rem',14], rantai:['Rantai',18], oli:['Oli mesin',10], filter:['Filter udara',12] } };
-  const KIND = { seed:'Modal awal', fund_business:'Modal ke usaha', withdraw:'Tarik dari usaha', buy_stock:'Beli bahan', sale:'Pendapatan pesanan', upgrade:'Upgrade usaha', loan_disburse:'Pencairan pinjaman', loan_payment:'Pembayaran pinjaman' };
+  const KIND = { seed:'Modal awal', fund_business:'Modal ke usaha', withdraw:'Tarik dari usaha', buy_stock:'Beli bahan', sale:'Pendapatan pesanan', gift:'Hadiah', upgrade:'Upgrade usaha', loan_disburse:'Pencairan pinjaman', loan_payment:'Pembayaran pinjaman' };
   const PURPOSE = { modal_bisnis:'Modal bisnis', pembelian_bahan:'Pembelian bahan', upgrade:'Upgrade usaha', rumah:'Kebutuhan rumah', keluarga:'Pengeluaran keluarga', lainnya:'Lainnya' };
   const STAT = { MENUNGGU_PERSETUJUAN:'MENUNGGU PERSETUJUAN', MENAWAR:'MENAWAR ULANG', AKTIF:'AKTIF', LUNAS:'LUNAS', DITOLAK:'DITOLAK', DIBATALKAN:'DIBATALKAN' };
   const UPCOST = { 1:250, 2:500 };
 
-  let sb = null, world = null, me = null, role = 'florist', names = {}, st = null, tab = 'saldo', busy = false, ch = null, o = {}, loaded = false, unavailable = false, prevLoans = null, prevResetStatus = null, noteTimer = 0;
+  let prevGR = null, sb = null, world = null, me = null, role = 'florist', names = {}, st = null, tab = 'saldo', busy = false, ch = null, o = {}, loaded = false, unavailable = false, prevLoans = null, prevResetStatus = null, noteTimer = 0;
 
   const myW = kind => st && st.wallets.find(w => w.owner_id === me && w.kind === kind);
   const partnerId = () => o.partnerId && o.partnerId();
@@ -41,10 +41,14 @@ const Econ = (() => {
         else if (l.status === 'LUNAS') o.notify && o.notify('Pinjaman lunas! 🎉');
         else if (l.status === 'MENAWAR' && l.borrower === me) o.notify && o.notify(`${nm(l.lender)} menawar ulang pinjamanmu. Buka UANG → PINJAMAN.`); } }
     prevLoans = loans;
+    if (st.gifts) { for (let n = 1; n <= 8; n++) { if (st.gifts.sent >= n) o.onFlag && o.onFlag('gs:' + n); if (st.gifts.received >= n) o.onFlag && o.onFlag('gr:' + n); }
+      if (prevGR !== null && st.gifts.received > prevGR) o.notify && o.notify(`🎁 ${nm(partnerId())} mengirim hadiah untukmu!`); prevGR = st.gifts.received; }
+    if (st.loans.filter(l => l.status === 'AKTIF' || l.status === 'LUNAS').length >= 2) o.onFlag && o.onFlag('loans:2');
     if (st.loans.some(l => l.status === 'AKTIF' || l.status === 'LUNAS')) o.onFlag && o.onFlag('loan_active');
     if (st.loans.some(l => l.status === 'LUNAS')) o.onFlag && o.onFlag('loan_settled');
     if (st.inventory.length || st.ledger.some(t => t.kind === 'buy_stock')) o.onFlag && o.onFlag('stock_bought');
-    const b = myBiz(); if (b && b.level >= 2) o.onFlag && o.onFlag('upgraded'); if (b && b.reputation >= 1) o.onFlag && o.onFlag('order_done');
+    const b = myBiz(); if (b && b.level >= 2) o.onFlag && o.onFlag('upgraded'); if (b) for (const n of [1, 3, 5, 8, 12, 15]) if (b.reputation >= n) o.onFlag && o.onFlag('rep:' + n);
+    const bw = myW('business'); if (bw) for (const n of [500, 800, 1000, 1200]) if (bw.balance >= n) o.onFlag && o.onFlag('cash:' + n);
     const r = st.reset, rs = r ? r.status : null;
     if (r && prevResetStatus !== rs) {
       if (rs === 'menunggu' && r.requested_by !== me) o.notify && o.notify(`⚠ ${nm(r.requested_by)} mengajukan RESET DUNIA. Buka UANG → DUNIA untuk menyetujui atau menolak.`);
@@ -76,9 +80,11 @@ const Econ = (() => {
       <div class="jch">PINDAHKAN DANA</div><input id="e-amt" type="number" min="1" placeholder="Jumlah (KC)" inputmode="numeric">
       <div class="row"><button data-act="fund">MODAL KE USAHA</button><button data-act="withdraw" class="sec">TARIK KE PRIBADI</button></div>
       <div class="jch">RINGKASAN (30 TRANSAKSI TERAKHIR)</div><p>Pemasukan: <b>${KC(inc)}</b> · Pengeluaran: <b>${KC(out)}</b> · Selisih: <b>${KC(inc - out)}</b></p>
+      ${partnerId() ? `<div class="jch">BERI HADIAH KE ${esc(nm(partnerId()).toUpperCase())}</div><input id="g-amt" type="number" min="1" max="1000" placeholder="Jumlah hadiah (1–1.000 KC)" inputmode="numeric"><button data-act="gift" class="sec">KIRIM HADIAH 🎁</button>` : ''}
       <p class="mut">Uang pribadi dan kas usaha dipisah. Pernikahan tidak otomatis menggabungkannya.</p>`;
   }
   function vBisnis() {
+    if (o.locked && o.locked()) return '<p>Bisnis baru dibuka pada <b>Hari ke-5</b> (Chapter 2). Selesaikan dulu Chapter 1: kenali kota dan pasanganmu.</p>';
     if (!o.inShop || !o.inShop()) return '<p>Bisnis dikerjakan di <b>meja kerja</b> di dalam tempat usahamu (Toko Bunga → Meja Rangkai, Bengkel → Meja Kerja).</p>';
     const b = myBiz(), w = myW('business'), inv = Object.fromEntries(st.inventory.map(i => [i.item, i.qty])), cat = CAT[role];
     const maxO = Math.min(5, 2 + b.level), up = UPCOST[b.level];
@@ -141,6 +147,7 @@ const Econ = (() => {
     if (b.dataset.tab) { tab = b.dataset.tab; setMsg(''); render(); return; }
     const a = b.dataset.act, d = b.dataset;
     if (a === 'fund' || a === 'withdraw') call('econ_transfer', { p_dir:a, p_amount:Math.floor(num('e-amt')), p_key:uid4() }, 'Transfer berhasil.');
+    else if (a === 'gift') call('econ_gift', { p_amount:Math.floor(num('g-amt')), p_key:uid4() }, 'Hadiah terkirim. 💝');
     else if (a === 'neworder') call('biz_new_order', {}, 'Pesanan baru diterima.');
     else if (a === 'buy') call('biz_buy', { p_item:d.item, p_qty:Number(d.qty), p_key:uid4() }, 'Bahan dibeli.');
     else if (a === 'fulfill') call('biz_fulfill', { p_order:d.id, p_key:uid4() }, 'Pesanan selesai! Pendapatan masuk ke kas usaha.');
@@ -159,7 +166,7 @@ const Econ = (() => {
 
   function open(t) { tab = t || tab; setMsg(''); $('econ').classList.remove('hidden'); render(); refresh(); }
   async function init(opts) {
-    o = opts; sb = opts.sb; world = opts.world; me = opts.me; role = opts.role; names = opts.names; st = null; unavailable = false; prevLoans = null; prevResetStatus = null;
+    o = opts; sb = opts.sb; world = opts.world; me = opts.me; role = opts.role; names = opts.names; st = null; unavailable = false; prevLoans = null; prevResetStatus = null; prevGR = null;
     const { data, error } = await sb.rpc('econ_init', { p_world: world });
     if (error) { unavailable = true; if (o.notify) setTimeout(() => o.notify('Fitur uang belum aktif di server (jalankan 003_economy.sql).'), 1500); return; }
     st = data; prevLoans = new Map(st.loans.map(l => [l.id, l.status])); prevResetStatus = st.reset ? st.reset.status : null; afterState();
