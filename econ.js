@@ -150,7 +150,10 @@ const Econ = (() => {
     else if (a === 'gift') call('econ_gift', { p_amount:Math.floor(num('g-amt')), p_key:uid4() }, 'Hadiah terkirim. 💝');
     else if (a === 'neworder') call('biz_new_order', {}, 'Pesanan baru diterima.');
     else if (a === 'buy') call('biz_buy', { p_item:d.item, p_qty:Number(d.qty), p_key:uid4() }, 'Bahan dibeli.');
-    else if (a === 'fulfill') call('biz_fulfill', { p_order:d.id, p_key:uid4() }, 'Pesanan selesai! Pendapatan masuk ke kas usaha.');
+    else if (a === 'fulfill') { const od = st.orders.find(x => x.id === d.id); if (!od) return; const inv = Object.fromEntries(st.inventory.map(i => [i.item, i.qty]));
+      const lack = Object.entries(od.need).find(([k, v]) => (inv[k] || 0) < v); if (lack) { setMsg(`Stok ${(CAT[role][lack[0]] || [lack[0]])[0]} kurang. Beli bahan dulu.`); return; }
+      if (busy) return; setMsg('');
+      Mini.play({ order:od, role }).then(res => { if (res) call('biz_fulfill', { p_order:d.id, p_key:uid4() }, `Pesanan selesai! ${'⭐'.repeat(res.stars)} Pendapatan masuk ke kas usaha.`); }); }
     else if (a === 'upgrade') { if (confirm('Upgrade usaha? Biaya diambil dari kas usaha.')) call('biz_upgrade', { p_key:uid4() }, 'Usaha ditingkatkan!'); }
     else if (a === 'loanreq') call('loan_request', { p_principal:Math.floor(num('l-p')), p_interest:num('l-i') || 0, p_n:Math.floor(num('l-n')), p_purpose:$('l-t').value, p_key:uid4() }, 'Permintaan pinjaman dikirim. Menunggu persetujuan.');
     else if (a === 'loan') call('loan_respond', { p_loan:d.id, p_action:d.a }, 'Tersimpan.');

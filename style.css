@@ -134,3 +134,22 @@ button:disabled{opacity:.5;cursor:default}
 .mgrid button{margin:0;min-height:46px;position:relative}
 #j-badge{position:absolute;right:4px;top:-7px;background:var(--bad);color:#fff;font:7px var(--h);padding:2px 4px}
 @media (max-height:480px){#stick{width:92px;height:92px;bottom:10px}#knob{left:25px;top:25px;width:42px;height:42px}#act{width:62px;height:62px;bottom:16px}#toasts{top:calc(92px + env(safe-area-inset-top))}}
+
+/* ---------- Tidur & transisi hari ---------- */
+#sleepui{position:absolute;left:0;right:0;top:34%;text-align:center;z-index:5;pointer-events:none;padding:0 16px}
+#sleepui .z{font:20px var(--h);color:#cfe0ff;text-shadow:3px 3px 0 #000;animation:blink 1.6s steps(2) infinite}
+#sleep-msg{font-size:21px;margin:8px 0 12px;color:#fff;text-shadow:2px 2px 0 #000}
+#sleepui button{width:auto;display:inline-block;padding:8px 18px;pointer-events:auto}
+#fadeblk{position:absolute;inset:0;background:#05060f;opacity:0;pointer-events:none;transition:opacity 1.5s ease;z-index:9;display:flex;align-items:center;justify-content:center}
+#fadeblk.on{opacity:1}
+#fadeblk span{font:12px var(--h);color:#8fa8e8;opacity:0;transition:opacity 1s .4s}#fadeblk.on span{opacity:1}
+
+/* ---------- Mini-game pesanan ---------- */
+#mini{z-index:8}
+#mini .box{width:min(100%,520px)}
+#mini-cv{width:100%;max-width:480px;display:block;margin:6px auto;image-rendering:pixelated;background:#2a2036;box-shadow:0 0 0 3px #0008;touch-action:none}
+#mini-help{font-size:19px;margin:4px 0}
+#mini-tray{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+#mini-tray button{width:auto;flex:1 1 40%;margin:0;min-height:44px;font-size:9px}
+#mini-tray button.sel{outline:3px solid #fff}
+.mini-sw{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:middle;box-shadow:0 0 0 1px #0008}

@@ -21,7 +21,7 @@ const Scenes = (() => {
     const s = (px, py) => { const tx = Math.floor(px/TS), ty = Math.floor(py/TS); return tx < 0 || ty < 0 || tx >= W || ty >= H || isSolid(tx, ty); };
     return (x, y) => s(x-5, y-6) || s(x+4.99, y-6) || s(x-5, y) || s(x+4.99, y);
   };
-  const NAMES = { florist:'Toko Bunga', mechanic:'Bengkel', cafe:'Kafe', hall:'Balai Kota', house:'Rumah', market:'Pasar', school:'Sekolah Sihir' };
+  const NAMES = { florist:'Toko Bunga', mechanic:'Bengkel', cafe:'Kafe', hall:'Balai Kota', house_f:'Rumah Florist', house_m:'Rumah Mekanik', market:'Pasar', school:'Sekolah Sihir' };
 
   // ---------------- KOTA ----------------
   const city = (() => {
@@ -32,7 +32,8 @@ const Scenes = (() => {
       { id:'mechanic', x:28, y:7,  w:7, h:4, roof:'#4a79c9', wall:'#c9d3e6', pot:'#f2c14e' },
       { id:'cafe',     x:5,  y:17, w:5, h:4, roof:'#a0693d', wall:'#ead8c0', pot:'#f5f5f5' },
       { id:'hall',     x:16, y:2,  w:8, h:5, roof:'#7a7f8f', wall:'#dcdde3', pot:'#b77ae8' },
-      { id:'house',    x:29, y:17, w:5, h:4, roof:'#c9574f', wall:'#efe0cf', pot:'#f2c14e' },
+      { id:'house_m',  x:29, y:17, w:5, h:4, roof:'#3d5a8a', wall:'#e1e6f0', pot:'#f2c14e' },
+      { id:'house_f',  x:23, y:18, w:5, h:4, roof:'#f0a0c0', wall:'#fbeaf1', pot:'#ff8fb8' },
       { id:'market',   x:13, y:18, w:5, h:4, roof:'#4fa36a', wall:'#d8ead9', pot:'#e8833a' },
       { id:'school',   x:31, y:1,  w:7, h:4, roof:'#6a4ab8', wall:'#e4dcf5', pot:'#7ad9f0' },
     ];
@@ -118,7 +119,7 @@ const Scenes = (() => {
             if (ry === 2 && (x - b.x) % 2 === 1) { lights.push({ x:px+8, y:py+7, r:13 }); R(g,'#fff',px+2,py+2,12,10); R(g,'#7fb8e6',px+3,py+3,10,8); R(g,'#fff',px+7,py+3,1,8); R(g,'#fff',px+3,py+6,10,1); R(g,'#fff7',px+4,py+4,2,2); R(g,'#8a5a44',px+2,py+12,12,3); R(g,b.pot,px+3,py+11,2,2); R(g,'#fff',px+7,py+11,2,2); R(g,b.pot,px+11,py+11,2,2); } }
           if (grid[y*W + x] === T.DOOR) { R(g,'#5b3a1e',px+2,py+1,12,15); R(g,'#7a4a26',px+3,py+2,10,14); R(g,'#8f5a30',px+4,py+3,3,5); R(g,'#8f5a30',px+9,py+3,3,5); R(g,'#e8c25a',px+10,py+10,2,2); }
         }
-        if (b.id === 'house' || b.id === 'mechanic' || b.id === 'cafe') { const cx = (b.x + 1)*TS + 8, cy = b.y*TS - 5; R(g,'#7a4a3a',cx,cy,5,10); R(g,'#5b362b',cx-1,cy,7,2); }
+        if (b.id === 'house_f' || b.id === 'house_m' || b.id === 'mechanic' || b.id === 'cafe') { const cx = (b.x + 1)*TS + 8, cy = b.y*TS - 5; R(g,'#7a4a3a',cx,cy,5,10); R(g,'#5b362b',cx-1,cy,7,2); }
         if (b.id === 'school') { const cx = (b.x + b.w/2)*TS; R(g,'#f2e08a',cx-4,b.y*TS+4,9,9); R(g,b.roof,cx-1,b.y*TS+3,8,8); for (const [sx, sy] of [[10,6],[30,10],[52,5],[76,12],[96,7]]) { R(g,'#f2e08a',b.x*TS+sx,b.y*TS+sy,2,2); R(g,'#fff8',b.x*TS+sx+1,b.y*TS+sy-1,1,1); } }
         for (let k = -1; k <= 1; k++) { const px = (d.dx + k)*TS, py = d.dy*TS; for (let i = 0; i < 16; i += 4) { R(g,((i/4)%2 ? '#ffffff' : b.roof),px+i,py,4,5); } R(g,'#0003',px,py+5,TS,1); }
         g.font = 'bold 7px monospace'; g.textAlign = 'center'; g.fillStyle = '#0007'; g.fillText(NAMES[b.id], (b.x + b.w/2)*TS + 0.5, (b.y + 1)*TS + 4.5); g.fillStyle = '#fff'; g.fillText(NAMES[b.id], (b.x + b.w/2)*TS, (b.y + 1)*TS + 4);
@@ -172,6 +173,7 @@ const Scenes = (() => {
       case 'board': R(g,'#5b3a1e',X,Y,Wd,Ht); R(g,'#c9a14a',X+2,Y+2,Wd-4,Ht-4); for (let i = 0; i < 4; i++) { R(g,'#fff',X+6+i*11,Y+6,8,10); R(g,['#e85a5a','#4a79c9','#4fa36a','#f2c14e'][i],X+9+i*11,Y+4,2,2); } break;
       case 'benchW': R(g,'#0003',X,Y+14,Wd,2); R(g,'#8b5e34',X,Y+6,Wd,5); R(g,'#a47244',X,Y+6,Wd,2); R(g,'#5b3a1e',X+2,Y+11,2,4); R(g,'#5b3a1e',X+Wd-4,Y+11,2,4); break;
       case 'bedF': R(g,'#0003',X,Y+Ht,Wd,2); R(g,'#7a4a26',X,Y,Wd,Ht); R(g,'#ffffff',X+2,Y+2,Wd-4,10); R(g,'#e87aa6',X+2,Y+12,Wd-4,Ht-14); R(g,'#fff',X+3,Y+3,12,6); break;
+      case 'bedM': R(g,'#0003',X,Y+Ht,Wd,2); R(g,'#4a3a2a',X,Y,Wd,Ht); R(g,'#ffffff',X+2,Y+2,Wd-4,10); R(g,'#4a79c9',X+2,Y+12,Wd-4,Ht-14); R(g,'#2f5aa0',X+2,Y+12,Wd-4,3); R(g,'#fff',X+3,Y+3,12,6); break;
       case 'wardrobe': R(g,'#0003',X,Y+Ht,Wd,2); R(g,'#6b4423',X,Y,Wd,Ht); R(g,'#8b5e34',X+2,Y+2,Wd/2-3,Ht-4); R(g,'#8b5e34',X+Wd/2+1,Y+2,Wd/2-3,Ht-4); R(g,'#e8c25a',X+Wd/2-3,Y+Ht/2,2,3); R(g,'#e8c25a',X+Wd/2+1,Y+Ht/2,2,3); break;
       case 'wallwin': g.fillStyle = 'rgba(255,255,210,.12)'; g.beginPath(); g.moveTo(X+6, Y+Ht-2); g.lineTo(X+Wd-6, Y+Ht-2); g.lineTo(X+Wd+12, Y+Ht+40); g.lineTo(X-6, Y+Ht+40); g.fill(); R(g,'#fff',X+4,Y+3,Wd-8,Ht-8); R(g,'#8fd0f5',X+6,Y+5,Wd-12,Ht-12); R(g,'#fff',X+Wd/2-1,Y+5,2,Ht-12); R(g,'#fff7',X+8,Y+7,6,3); R(g,'#c9574f',X+2,Y+3,3,Ht-8); R(g,'#c9574f',X+Wd-5,Y+3,3,Ht-8); break;
       case 'kitchen': counter(g,X,Y,Wd,Ht,'#dfe3ea','#9aa0ad'); R(g,'#333',X+6,Y+3,10,4); R(g,'#c9ced9',X+Wd-18,Y+2,8,5); R(g,'#e87aa6',X+Wd/2,Y-4,4,5); break;
@@ -194,19 +196,19 @@ const Scenes = (() => {
   // Data interior: [tipe, x, y, w, h, padat?, nama, teks]
   const NPC = {
     florist: { x:6, y:3, name:'Bu Mawar', body:'#9a5ab8', hair:'#c9c9d6',
-      own:['Selamat datang di tokomu sendiri! Aku Bu Mawar, pemasok bunga langgananmu.','Nanti di sini kamu akan merangkai bouquet sesuai pesanan pelanggan, mengatur stok, lalu menjual dengan harga yang kamu tentukan.','Untuk sekarang, kenali dulu kotamu: ngobrollah dengan Pak Udin di Pasar, Mbak Kiki di Kafe, dan Pak Lurah di Balai Kota.','Semangat membuka usaha baru!'],
+      own:['Selamat datang di tokomu sendiri! Aku Bu Mawar, pemasok bunga langgananmu.','Nanti di sini kamu akan merangkai bouquet sesuai pesanan pelanggan, mengatur stok, lalu menjual dengan harga yang kamu tentukan.','Untuk sekarang, kenali dulu kotamu: ngobrollah dengan Pak Udin di Pasar, Mbak Erma di Kafe, dan Pak Lurah di Balai Kota.','Semangat membuka usaha baru!'],
       other:['Ini toko bunga milik pasanganmu, ya? Tokonya cantik sekali.','Kalau dia butuh bantuan modal atau stok, kamu bisa membantunya nanti lewat fitur pinjaman.','Mampirlah sesekali, ya!'] },
     mechanic: { x:3, y:3, name:'Pak Bimo', body:'#3d8a8a', hair:'#222',
       own:['Wah, bengkel baru! Aku Bimo, pemasok suku cadang. Barangku bagus-bagus, tenang saja.','Nanti pelanggan datang dengan keluhan motor mereka. Tugasmu mendiagnosis, memilih suku cadang yang tepat, lalu memperbaikinya.','Untuk sekarang, kenali dulu orang-orang di kota ini. Mulai dari Pasar, Kafe, lalu Balai Kota.'],
       other:['Kamu temannya pemilik bengkel ini? Dia orang yang teliti.','Motor pengantar bunga pasti sering butuh servis. Kalian bisa saling bantu.'] },
-    cafe: { x:8, y:3, name:'Mbak Kiki', body:'#e8833a', hair:'#7a3b2a',
-      lines:['Selamat datang di Kafe Kota! Aku Kiki.','Kafe ini tempat warga berkumpul. Banyak pelanggan tetap datang dari sini.','Kudengar pemilik toko bunga dan pemilik bengkel akan sering bertemu. Mungkin kalian bisa saling melengkapi?','Oh ya, Pak Lurah di Balai Kota sedang mencari warga baru. Temui beliau, ya.'] },
+    cafe: { x:8, y:3, name:'Mbak Erma', body:'#e8833a', hair:'#7a3b2a',
+      lines:['Selamat datang di Kafe Kota! Aku Erma.','Kafe ini tempat warga berkumpul. Banyak pelanggan tetap datang dari sini.','Kudengar pemilik toko bunga dan pemilik bengkel akan sering bertemu. Mungkin kalian bisa saling melengkapi?','Oh ya, Pak Lurah di Balai Kota sedang mencari warga baru. Temui beliau, ya.'] },
     hall: { x:7, y:2, name:'Pak Lurah', body:'#7a7f8f', hair:'#aaa',
       lines:['Selamat datang, warga baru! Saya Pak Lurah.','Kota ini kecil, tapi hangat. Usaha kalian berdua akan sangat berarti bagi warga.','Kota akan terus berkembang: area baru terbuka seiring usaha dan cerita kalian.','Lihat Papan Pengumuman di dinding untuk kabar terbaru. Selamat bertugas!'] },
     school: { x:7, y:3, name:'Bu Arunika', body:'#6a4ab8', hair:'#e8e8f5' },
     school2: { x:10, y:3, name:'Kak Rimba', body:'#2f9ab8', hair:'#1d1d3a' },
     market: { x:7, y:3, name:'Pak Udin', body:'#4fa36a', hair:'#5b3a1e',
-      lines:['Halo! Aku Udin, pedagang di pasar ini sudah lama.','Di sini bahan-bahan dari pemasok masuk ke kota: bunga segar, suku cadang, dan banyak lagi.','Kalau mau tahu kabar kota, tanyakan ke Mbak Kiki di Kafe. Dia tahu semuanya!'] },
+      lines:['Halo! Aku Udin, pedagang di pasar ini sudah lama.','Di sini bahan-bahan dari pemasok masuk ke kota: bunga segar, suku cadang, dan banyak lagi.','Kalau mau tahu kabar kota, tanyakan ke Mbak Erma di Kafe. Dia tahu semuanya!'] },
   };
   const SPEC = {
     florist: { floor:['#e8cfa0','#dfc493'], wall:'#f6dfe8', trim:'#e87aa6', items:[
@@ -235,13 +237,20 @@ const Scenes = (() => {
       ['desk',5,3,4,1,1,'Meja Pelayanan','Meja tempat urusan warga dilayani.'],
       ['benchW',2,6,3,1,1,'Kursi Tunggu','Kursi untuk warga yang menunggu antrean.'], ['benchW',9,6,3,1,1,'Kursi Tunggu','Kursi untuk warga yang menunggu antrean.'],
       ['plant',12,3,1,1,1,'Tanaman Hias','Tanaman besar di sudut ruangan.'], ['plant',1,4,1,1,1,'Tanaman Hias','Terawat dengan baik.'] ] },
-    house: { floor:['#e0c28f','#d6b783'], wall:'#efe0cf', trim:'#c9574f', items:[
-      ['wardrobe',1,1,2,2,1,'Lemari Pakaian','Lemari berisi pakaian. Nanti kamu bisa mengganti penampilan di sini.'], ['wallwin',4,0,2,2,0,'',''],
-      ['kitchen',8,1,4,2,1,'Dapur','Dapur mungil dengan kompor dan wastafel.'],
-      ['rug',4,4,3,2,0,'',''], ['sofa',4,6,3,1,1,'Sofa','Sofa empuk untuk beristirahat setelah seharian bekerja.'],
-      ['bedF',1,5,2,3,1,'Tempat Tidur','Tempat tidur sederhana. Nanti bisa dipakai untuk mengakhiri hari.'],
+    house_f: { floor:['#ecd2b8','#e4c8ac'], wall:'#fbeaf1', trim:'#e87aa6', items:[
+      ['wardrobe',1,1,2,2,1,'Lemari Pakaian','Lemari berisi celemek, gaun, dan pita rambut.'], ['wallwin',4,0,2,2,0,'',''],
+      ['kitchen',8,1,4,2,1,'Dapur','Dapur mungil dengan kompor dan wastafel. Ada vas bunga di jendela.'],
+      ['rug',4,4,3,2,0,'',''], ['sofa',4,6,3,1,1,'Sofa','Sofa empuk untuk beristirahat setelah seharian merangkai bunga.'],
+      ['bedF',1,5,2,3,1,'Tempat Tidur','Tempat tidurmu. Hari baru dimulai saat kamu dan pasanganmu tidur bersamaan.'],
       ['tableH',9,5,3,2,1,'Meja Makan','Meja makan untuk dua orang. Suatu hari mungkin bertambah kursi...'],
-      ['plant',12,8,1,1,1,'Tanaman Hias','Menyegarkan sudut rumah.'] ] },
+      ['bucket',12,4,1,1,1,'Vas Bunga','Bunga segar dari tokomu, menyegarkan rumah.'], ['plant',12,8,1,1,1,'Tanaman Hias','Menyegarkan sudut rumah.'] ] },
+    house_m: { floor:['#cdbf9f','#c3b494'], wall:'#e1e6f0', trim:'#4a79c9', items:[
+      ['wardrobe',1,1,2,2,1,'Lemari Pakaian','Lemari berisi overall bengkel dan jaket kulit.'], ['wallwin',4,0,2,2,0,'',''],
+      ['kitchen',8,1,4,2,1,'Dapur','Dapur mungil. Ada kaleng kopi dan beberapa cangkir bernoda oli.'],
+      ['rug',4,4,3,2,0,'',''], ['sofa',4,6,3,1,1,'Sofa','Sofa tempat tidur siang setelah servis seharian.'],
+      ['bedM',1,5,2,3,1,'Tempat Tidur','Tempat tidurmu. Hari baru dimulai saat kamu dan pasanganmu tidur bersamaan.'],
+      ['tableH',9,5,3,2,1,'Meja Makan','Meja makan untuk dua orang. Suatu hari mungkin bertambah kursi...'],
+      ['toolbox',12,4,1,1,1,'Kotak Perkakas','Perkakas cadangan untuk perbaikan kecil di rumah.'], ['drum',12,8,1,1,1,'Drum Oli Bekas','Drum bekas yang dijadikan pot tanaman.'] ] },
     school: { floor:['#8f86c9','#867cc0'], wall:'#e4dcf5', trim:'#6a4ab8', items:[
       ['shelfB',1,1,3,2,1,'Rak Buku Mantra','Buku-buku tua berisi mantra dasar: Mekar, Lancar, Terang. Tulisannya bergerak pelan.'],
       ['chalk',5,0,4,2,1,'Papan Tulis Ajaib','Tulisan kapur muncul sendiri: "Pelajaran hari ini: sihir kecil untuk kehidupan sehari-hari."'],
@@ -398,7 +407,7 @@ const Game = (() => {
   const me = { x:0, y:0, vx:0, vy:0, dir:'down', anim:0, moving:false, role:'florist', name:'Saya' };
   const remote = { on:false, x:0, y:0, tx:0, ty:0, dir:'down', moving:false, anim:0, role:'mechanic', name:'Pemain', seen:0, map:'kota' };
   const cam = { x:0, y:0 }; let scale = 3, vw = 0, vh = 0, hooks = {}, scene = Scenes.city, outPos = { x:0, y:0 }, near = null;
-  const dwell = {}; let socialT = 0, lastSent = 0, lastSentMoving = false, trans = null, dialog = null, cd = 0, whereTxt = '';
+  const dwell = {}; let sleeping = false, dawning = false, sleepT = 0, bedRect = null, socialT = 0, lastSent = 0, lastSentMoving = false, trans = null, dialog = null, cd = 0, whereTxt = '';
 
   let zoomK = (() => { try { return Number(localStorage.getItem('pl_zoom')) || 1; } catch (e) { return 1; } })(), baseScale = 3;
   // Layar penuh: skala dihitung dari ukuran CSS layar (bukan piksel perangkat) agar HP tidak jadi mungil. ~11 petak pada sisi terpendek.
@@ -412,6 +421,41 @@ const Game = (() => {
 
   function setScene(s) { scene = s; if (!s.img && s.render) s.img = s.render(); applyScale(); snapCam(); cd = 0.7; lastSent = 0; }
   const fadeTo = fn => { if (!trans) trans = { phase:'out', t:0, fn }; };
+  // ---------- Tidur bersamaan: kedua pemain harus tidur di saat yang sama untuk memulai hari baru ----------
+  function bedAction(a) {
+    if (scene.id !== Story.home()) { openDialog(a.name, ['Ini tempat tidur ' + (remote.name || 'pasanganmu') + '. Kamu tidur di rumahmu sendiri.']); return; }
+    const c = Story.canSleep(); if (!c.ok) { openDialog(a.name, [c.msg]); return; }
+    if (hooks.hasPartner && hooks.hasPartner() && !remote.on) { openDialog(a.name, ['Pasanganmu sedang offline. Hari baru dimulai setelah kalian berdua tidur bersamaan. Tunggu dia online, ya.']); return; }
+    fadeTo(() => { sleeping = true; dawning = false; sleepT = 0; bedRect = a.rect; me.vx = me.vy = 0; lastSent = 0; $('sleepui').classList.remove('hidden'); });
+  }
+  function wake() { sleeping = false; sleepT = 0; if (bedRect) { me.x = bedRect.x + bedRect.w/2; me.y = bedRect.y + bedRect.h + 10; } me.dir = 'down'; lastSent = 0; $('sleepui').classList.add('hidden'); }
+  function sleepTick(dt) {
+    sleepT += dt; const solo = !(hooks.hasPartner && hooks.hasPartner());
+    $('sleep-msg').textContent = dawning ? 'Malam berlalu…' : solo ? 'Zzz… (tekan AKSI untuk bangun)' : remote.on ? 'Zzz… menunggu ' + remote.name + ' tidur. (AKSI untuk bangun)' : 'Pasanganmu offline. Hari baru butuh kalian berdua tidur. (AKSI untuk bangun)';
+    if (!dawning && !trans && sleepT > 0.8 && (solo || (remote.on && remote.sl))) startDawn();
+  }
+  function startDawn() {
+    dawning = true; $('fadeblk').classList.add('on');
+    setTimeout(() => {
+      if (!sleeping) { dawning = false; $('fadeblk').classList.remove('on'); return; }
+      const solo = !(hooks.hasPartner && hooks.hasPartner());
+      if (!solo && !(performance.now() - (remote.slAt || 0) < 2500)) { hooks.toast('Pasanganmu terbangun. Tidur lagi bersamaan untuk memulai hari baru.'); dawning = false; $('fadeblk').classList.remove('on'); wake(); return; }
+      const r = Story.trySleep();
+      if (!r.ok) { hooks.toast(r.msg); dawning = false; $('fadeblk').classList.remove('on'); wake(); return; }
+      const base = (Date.now() / 1000 * 1.5) % 1440; clockOffset = (390 - base + 1440) % 1440; try { localStorage.setItem('pl_clk', String(clockOffset)); } catch (e) {} // pagi 06:30
+      wake(); dawning = true;
+      setTimeout(() => { $('fadeblk').classList.remove('on'); setTimeout(() => { dawning = false; }, 1500); }, 700);
+    }, 1700);
+  }
+  function drawLying() {
+    if (!sleeping || !bedRect) return; const cx = Math.round(bedRect.x + bedRect.w/2), top = Math.round(bedRect.y), br = Math.round(Math.sin(now/700)*0.6 + 0.4), isF = me.role === 'florist', O = '#1d1a28', hair = isF ? '#7a3b2a' : '#2c2c3a';
+    const P = (col, x, y, w, h) => { ctx.fillStyle = col; ctx.fillRect(cx + x, top + y, w, h); };
+    P(O, -6, 3, 12, 11); P('#f2cfa5', -5, 4, 10, 9); P(hair, -5, 4, 10, 3); if (isF) { P(hair, -6, 5, 1, 8); P(hair, 5, 5, 1, 8); P('#ff8fb8', 3, 3, 3, 2); }
+    P(O, -3, 9, 2, 1); P(O, 1, 9, 2, 1); P('#f2a0a0', -4, 11, 2, 1); P('#f2a0a0', 2, 11, 2, 1);
+    P('rgba(255,255,255,.22)', -7, 15 - br, 14, 3); P('rgba(0,0,0,.12)', -7, 17, 14, 2);
+    ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center';
+    for (let i = 0; i < 3; i++) { const ph = ((now/900) + i/3) % 1; ctx.fillStyle = 'rgba(255,255,255,' + (1 - ph).toFixed(2) + ')'; ctx.fillText('z', cx + 10 + i*4 + Math.sin(ph*6)*2, top + 2 - ph*18); }
+  }
   function canEnter(d) {
     if (d.id !== 'school') return true;
     if (!Story.has('got_letter')) { hooks.toast('Sekolah ini hanya untuk warga yang diundang. Temui Pak Lurah di Balai Kota dulu.'); cd = 1.5; return false; }
@@ -440,10 +484,11 @@ const Game = (() => {
   function showDlg() { $('dlg-name').textContent = dialog.name; $('dlg-text').textContent = dialog.lines[dialog.i]; $('dlg-hint').textContent = dialog.i < dialog.lines.length - 1 ? 'ketuk / tekan AKSI untuk lanjut ▶' : 'ketuk / tekan AKSI untuk menutup ✔'; $('dlg').classList.remove('hidden'); }
   function act() {
     if (!running || trans || Guide.tutOpen()) return;
+    if (sleeping) { if (!dawning) wake(); return; }
     if (dialog) { dialog.i++; if (dialog.i >= dialog.lines.length) { dialog = null; $('dlg').classList.add('hidden'); } else showDlg(); return; }
     if (near) near.run();
   }
-  Input.setAction(act);
+  Input.setAction(act); $('sleep-cancel').onclick = () => { if (sleeping && !dawning) wake(); };
   const setZoom = k => { zoomK = clamp(k, 0.7, 1.7); try { localStorage.setItem('pl_zoom', String(zoomK)); } catch (e) {} resize(); snapCam(); hooks.toast && hooks.toast('Zoom: ' + Math.round(zoomK*100) + '%'); };
   $('g-zin').onclick = () => setZoom(zoomK * 1.18); $('g-zout').onclick = () => setZoom(zoomK / 1.18);
   $('g-full').onclick = () => { const el = document.documentElement; if (!document.fullscreenElement) { if (el.requestFullscreen) el.requestFullscreen().catch(() => {}); else hooks.toast && hooks.toast('Browser ini belum mendukung layar penuh. Di iPhone: Bagikan → Tambah ke Layar Utama agar tampil penuh.'); } else if (document.exitFullscreen) document.exitFullscreen(); };
@@ -458,10 +503,10 @@ const Game = (() => {
     else for (const a of scene.acts) {
       if (a.kind === 'npc') { const dd = Math.hypot(a.npc.x - me.x, a.npc.y - me.y); if (dd < 26 && dd < best) { best = dd; near = { label:'Bicara: ' + a.name, run:() => { const n = a.npc.n, fb = n.lines || (scene.id === me.role ? n.own : n.other); openDialog(a.name, Story.dialogue(a.npc.key || scene.id, fb)); } }; } }
       else if (a.kind === 'item') { const dd = Scenes.rectDist(me.x, me.y - 3, a.rect); if (dd < 10 && dd < best) { best = dd; const own = scene.id === me.role, work = own && (a.name === 'Meja Rangkai' || a.name === 'Meja Kerja'), cash = own && a.name === 'Meja Kasir';
-        const sleep = scene.id === 'house' && a.name === 'Tempat Tidur';
+        const sleep = scene.id.startsWith('house_') && a.name === 'Tempat Tidur';
         near = { label:(work ? 'Bekerja: ' : cash ? 'Buka keuangan: ' : sleep ? 'Tidur: ' : 'Periksa: ') + a.name, run:() => {
           if (work) return Econ.open('bisnis'); if (cash) return Econ.open('saldo');
-          if (sleep) { const r = Story.trySleep(); if (r.ok) fadeTo(() => {}); else openDialog(a.name, [r.msg]); return; }
+          if (sleep) return bedAction(a);
           Story.look(a.name);
           if (a.name === 'Bola Kristal' && remote.on && remote.map === 'school' && Story.chapter() >= 3 && Story.day() >= 13) Story.flag('crystal_together');
           if (a.name === 'Kuali Ramuan' && remote.on && remote.map === 'school' && Story.chapter() >= 2 && Story.day() >= 6) Story.flag('brew_together');
@@ -474,7 +519,7 @@ const Game = (() => {
   function step(dt) {
     if (cd > 0) cd -= dt;
     socialT -= dt; if (socialT <= 0) { socialT = 0.25; social(); }
-    const frozen = trans || dialog || Guide.tutOpen(), a = frozen ? { x:0, y:0 } : Input.axis(); const k = 1 - Math.exp(-16*dt);
+    const frozen = trans || dialog || sleeping || Guide.tutOpen(), a = frozen ? { x:0, y:0 } : Input.axis(); const k = 1 - Math.exp(-16*dt);
     me.vx += (a.x*SPEED - me.vx)*k; me.vy += (a.y*SPEED - me.vy)*k;
     if (Math.abs(me.vx) < 0.5 && a.x === 0) me.vx = 0; if (Math.abs(me.vy) < 0.5 && a.y === 0) me.vy = 0;
     const n = Math.max(1, Math.ceil(Math.max(Math.abs(me.vx), Math.abs(me.vy))*dt / 2));
@@ -495,11 +540,11 @@ const Game = (() => {
       if (d > 64) { remote.x = remote.tx; remote.y = remote.ty; } else { const kr = 1 - Math.exp(-12*dt); remote.x += (remote.tx - remote.x)*kr; remote.y += (remote.ty - remote.y)*kr; }
       remote.anim = remote.moving ? remote.anim + dt*9 : 0; if (performance.now() - remote.seen > 4000) remote.on = false; }
     const t = camTarget(), kc = 1 - Math.exp(-7*dt); cam.x += (t.tx - cam.x)*kc; cam.y += (t.ty - cam.y)*kc;
-    findNear(); if (now - clockT > 1000) { clockT = now; updateClock(); }
+    if (sleeping) { near = null; $('prompt').classList.add('hidden'); sleepTick(dt); } else findNear(); if (now - clockT > 1000) { clockT = now; updateClock(); }
     const w = remote.on && remote.map !== scene.id ? 'Pasangan di: ' + (Scenes.buildingName(remote.map) || 'Kota') : ''; if (w !== whereTxt) { whereTxt = w; $('h-where').textContent = w; }
     const nw = performance.now();
     if (hooks.send && (nw - lastSent > (me.moving ? 100 : 1000) || (lastSentMoving && !me.moving))) { lastSent = nw; lastSentMoving = me.moving;
-      hooks.send({ x:+me.x.toFixed(1), y:+me.y.toFixed(1), dir:me.dir, mv:me.moving, map:scene.id }); }
+      hooks.send({ x:+me.x.toFixed(1), y:+me.y.toFixed(1), dir:me.dir, mv:me.moving, map:scene.id, sl:sleeping }); }
   }
 
   // ---------- Grafik: karakter bergaris tepi + aksesori ----------
@@ -536,7 +581,8 @@ const Game = (() => {
   }
 
   // ---------- Grafik: waktu, cahaya, partikel, hujan ----------
-  const clockMin = () => (Date.now() / 1000 * 1.5) % 1440; // 1 detik nyata = 1,5 menit game; sama di kedua perangkat
+  let clockOffset = (() => { try { return Number(localStorage.getItem('pl_clk')) || 0; } catch (e) { return 0; } })();
+  const clockMin = () => (Date.now() / 1000 * 1.5 + clockOffset) % 1440; // 1 detik nyata = 1,5 menit game; bangun tidur = pukul 06:30
   const daylight = m => { const h = m / 60; if (h < 5 || h >= 20.5) return 0; if (h < 7) return (h - 5) / 2; if (h < 18) return 1; return 1 - (h - 18) / 2.5; };
   const isRain = () => Math.floor(Date.now() / 90000) % 6 === 4;
   const mkGlow = (r, g, b) => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); const gr = x.createRadialGradient(32, 32, 0, 32, 32, 32);
@@ -567,6 +613,7 @@ const Game = (() => {
       else { const a = 0.35 + 0.65*Math.abs(Math.sin(p.t*2.2 + p.ph)); ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = a*0.8; ctx.drawImage(glowWarm, p.x - 4, p.y - 4, 8, 8); ctx.globalAlpha = a; ctx.fillStyle = '#fff7b0'; ctx.fillRect(Math.round(p.x), Math.round(p.y), 1, 1); ctx.restore(); } }
   }
   function drawAtmos() { // ruang layar: warna waktu + hujan
+    if (sleeping) { ctx.fillStyle = 'rgba(8,10,40,' + Math.min(0.55, sleepT*0.4).toFixed(2) + ')'; ctx.fillRect(0, 0, cv.width, cv.height); }
     if (scene.id !== 'kota') return; const m = clockMin(), h = m/60, n = 1 - daylight(m), rain = isRain(), k = n*0.85;
     ctx.save(); ctx.globalCompositeOperation = 'multiply';
     if (k > 0.01) { ctx.fillStyle = `rgb(${(255 - 170*k)|0},${(255 - 155*k)|0},${(255 - 85*k)|0})`; ctx.fillRect(0, 0, cv.width, cv.height); }
@@ -583,11 +630,11 @@ const Game = (() => {
     ctx.setTransform(scale,0,0,scale, -Math.round(cam.x*scale), -Math.round(cam.y*scale)); ctx.imageSmoothingEnabled = false;
     ctx.drawImage(scene.img, 0, 0); if (scene.animate) scene.animate(ctx, now);
     for (const o of Story.objects(scene.id)) { const ox = Math.round(o.x), oy = Math.round(o.y), bb = Math.sin(now/300)*1.5; ctx.fillStyle = '#0003'; ctx.fillRect(ox-5, oy-1, 10, 3); ctx.fillStyle = '#a0693d'; ctx.fillRect(ox-5, oy-7, 10, 7); ctx.fillStyle = '#c88f5a'; ctx.fillRect(ox-5, oy-7, 10, 2); ctx.fillStyle = '#7d5430'; ctx.fillRect(ox-3, oy-10, 6, 3); ctx.fillStyle = '#fff'; ctx.fillRect(ox+6, Math.round(oy-12+bb), 2, 2); }
-    const list = [{ c:me, label:me.name }];
+    const list = sleeping ? [] : [{ c:me, label:me.name }];
     if (remote.on && remote.map === scene.id) list.push({ c:remote, label:remote.name });
     for (const c of scene.citizens) list.push({ c, label:'' }); for (const n of scene.npcs) list.push({ c:n, label:n.name });
     list.sort((a, b) => a.c.y - b.c.y).forEach(o => drawChar(o.c, o.c.x, o.c.y, o.label));
-    drawFx();
+    drawLying(); drawFx();
     // Penanda tujuan (panah kuning bergoyang)
     const g = Guide.target(); let mx = null, my = 0;
     if (g && !Guide.tutOpen()) { const bob = Math.sin(now/250)*2;
@@ -617,16 +664,16 @@ const Game = (() => {
   return {
     start(opts) { hooks = opts.hooks; Object.assign(me, { role:opts.role, name:opts.name, x:opts.x, y:opts.y, vx:0, vy:0 });
       remote.on = false; remote.role = opts.otherRole; remote.name = opts.otherName; remote.map = 'kota';
-      trans = null; dialog = null; $('dlg').classList.add('hidden'); outPos = { x:opts.x, y:opts.y };
+      trans = null; dialog = null; sleeping = false; dawning = false; $('sleepui').classList.add('hidden'); $('fadeblk').classList.remove('on'); $('dlg').classList.add('hidden'); outPos = { x:opts.x, y:opts.y };
       scene = Scenes.city; if (!scene.img) scene.img = scene.render(); resize(); snapCam();
       Guide.begin();
       running = true; last = performance.now(); raf = requestAnimationFrame(frame); },
-    stop() { running = false; cancelAnimationFrame(raf); dialog = null; $('dlg').classList.add('hidden'); $('prompt').classList.add('hidden'); },
+    stop() { running = false; cancelAnimationFrame(raf); dialog = null; sleeping = false; dawning = false; $('sleepui').classList.add('hidden'); $('fadeblk').classList.remove('on'); $('dlg').classList.add('hidden'); $('prompt').classList.add('hidden'); },
     onGreet(p) { Story.flag('greeted'); hooks.toast((p && p.name || 'Pasanganmu') + ' menyapamu! 👋'); },
     sceneId: () => scene.id,
     together: () => remote.on && remote.map === scene.id && Math.hypot(remote.x - me.x, remote.y - me.y) < 56,
     getPos: () => scene.id === 'kota' ? { x:me.x, y:me.y } : { x:outPos.x, y:outPos.y }, // di dalam bangunan, simpan posisi di depan pintu
-    onRemote(p) { remote.tx = p.x; remote.ty = p.y; remote.dir = p.dir; remote.moving = !!p.mv; remote.seen = performance.now();
+    onRemote(p) { remote.sl = !!p.sl; if (p.sl) remote.slAt = performance.now(); remote.tx = p.x; remote.ty = p.y; remote.dir = p.dir; remote.moving = !!p.mv; remote.seen = performance.now();
       if (p.map !== remote.map) { remote.map = p.map || 'kota'; remote.mapAt = performance.now(); remote.x = p.x; remote.y = p.y; }
       if (!remote.on) { remote.on = true; remote.x = p.x; remote.y = p.y; } },
   };
@@ -726,7 +773,7 @@ $('b-play').onclick = async () => {
   await startStory(mine); $('ui').classList.add('hidden'); $('game').classList.remove('hidden'); updateHud();
   Game.start({ role: mine.character_role, name: names[me.id] || 'Saya', x: pos.x, y: pos.y, guideKey: 'pl_' + world.id + '_' + me.id,
     otherRole: other ? other.character_role : 'mechanic', otherName: other ? (names[other.user_id] || 'Pemain') : 'Pemain',
-    hooks: { toast, sendGreet: p => { if (channel) channel.send({ type:'broadcast', event:'greet', payload: { id: me.id, ...p } }); }, send: p => { if (channel) channel.send({ type:'broadcast', event:'pos', payload: { id: me.id, ...p } }); } } });
+    hooks: { toast, hasPartner: () => members.length >= 2, sendGreet: p => { if (channel) channel.send({ type:'broadcast', event:'greet', payload: { id: me.id, ...p } }); }, send: p => { if (channel) channel.send({ type:'broadcast', event:'pos', payload: { id: me.id, ...p } }); } } });
   let lastSaved = '';
   clearInterval(saveT); saveT = setInterval(savePos, 5000);
   async function savePos() { const p = Game.getPos(), k = Math.round(p.x) + ',' + Math.round(p.y); if (k === lastSaved) return; lastSaved = k;

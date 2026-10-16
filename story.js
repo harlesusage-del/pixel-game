@@ -3,8 +3,8 @@
 // Chapter 1 (hari 1-4) Awal yang Baru | Chapter 2 (hari 5-8) Kota yang Sama | Chapter 3 (hari 9-14) Semakin Dekat.
 // Akhir tiap chapter: host memutuskan satu pilihan cerita (divalidasi server lewat story_decide).
 const Story = (() => {
-  const NAMES = { florist:'Toko Bunga', mechanic:'Bengkel', cafe:'Kafe', hall:'Balai Kota', house:'Rumah', market:'Pasar', school:'Sekolah Sihir' };
-  const NPCN = { florist:'Bu Mawar', mechanic:'Pak Bimo', market:'Pak Udin', cafe:'Mbak Kiki', hall:'Pak Lurah', school:'Bu Arunika', school2:'Kak Rimba' };
+  const NAMES = { florist:'Toko Bunga', mechanic:'Bengkel', cafe:'Kafe', hall:'Balai Kota', house_f:'Rumah Florist', house_m:'Rumah Mekanik', market:'Pasar', school:'Sekolah Sihir' };
+  const NPCN = { florist:'Bu Mawar', mechanic:'Pak Bimo', market:'Pak Udin', cafe:'Mbak Erma', hall:'Pak Lurah', school:'Bu Arunika', school2:'Kak Rimba' };
   const CHAPTERS = {
     1: { title:'Awal yang Baru', sub:'Dua orang asing, satu kota kecil, dan sebuah sekolah sihir yang membuat mereka enggan berjalan bersama.' },
     2: { title:'Kota yang Sama', sub:'Usaha mulai berjalan, dan perlahan kalian belajar saling mengandalkan.' },
@@ -25,7 +25,7 @@ const Story = (() => {
   const DECISIONS = {
     intro_night: { title:'Malam Perkenalan', req:'ch1:done', next:2,
       text:'Chapter 1 selesai: kalian berhasil melangkah ke Sekolah Sihir bersama. Sebagai host, tentukan di mana malam itu kalian berbincang santai untuk pertama kalinya. Pilihan ini membekas dalam cerita dan dialog warga.',
-      options:[ { v:'cafe', label:'Kafe Kota', effect:'Suasana hangat dan ramai. Mbak Kiki jadi saksi pertemuan kalian.' },
+      options:[ { v:'cafe', label:'Kafe Kota', effect:'Suasana hangat dan ramai. Mbak Erma jadi saksi pertemuan kalian.' },
         { v:'taman', label:'Taman Kota', effect:'Tenang di bawah pohon dan dekat kolam. Warga membicarakan keromantisan taman.' },
         { v:'alun', label:'Alun-alun', effect:'Di dekat air mancur, di tengah kota. Pak Lurah menyebutnya awal ikatan kota ini.' } ] },
     first_outing: { title:'Jalan Berdua Pertama', req:'ch2:done', next:3,
@@ -44,6 +44,7 @@ const Story = (() => {
   let flags = new Set(), chapter = 1, decisions = {}, role = 'florist', isHost = false, key = '', mode = 'local', opts = {}, cb = {}, log = [];
   const has = f => flags.has(f);
   const other = () => role === 'florist' ? 'mechanic' : 'florist';
+  const homeId = () => role === 'florist' ? 'house_f' : 'house_m';
   const will = () => has('will:3') ? 3 : has('will:2') ? 2 : has('will:1') ? 1 : 0;
   const curDay = () => { let d = 1; for (const f of flags) if (f.startsWith('day:')) d = Math.max(d, Number(f.slice(4)) || 1); return d; };
   const partner = () => (opts.partnerName && opts.partnerName()) || 'pasanganmu';
@@ -54,13 +55,13 @@ const Story = (() => {
   // ---------------- Daftar misi ----------------
   const Q = (id, cat, ch, day, title, desc, steps, reward, x = {}) => ({ id, cat, ch, day, title, desc, steps, reward, pre:x.pre || [], start:x.start, opt:!!x.opt, grants:x.grants || [], gnote:x.gnote });
   const S = (id, text, t = {}) => ({ id, text, t });
-  const quests = () => { const m = role, o = other(), B = NAMES, MJ = m === 'florist' ? 'Meja Rangkai' : 'Meja Kerja', RAK = m === 'florist' ? 'Rak Bunga' : 'Rak Suku Cadang'; const L = [
+  const quests = () => { const m = role, o = other(), B = NAMES, MJ = m === 'florist' ? 'Meja Rangkai' : 'Meja Kerja', RAK = m === 'florist' ? 'Rak Bunga' : 'Rak Suku Cadang', HOME = m === 'florist' ? 'house_f' : 'house_m'; const L = [
     // ================= CHAPTER 1 (hari 1-4) =================
     Q('q1','utama',1,1,'Hari Pertama di Kota','Kenali tempat usahamu dan sapa pemasok langgananmu.',
       [ S('enter:' + m, `Masuk ke ${B[m]} (tempat usahamu)`, { door:m }), S('talk:' + m, `Ajak bicara ${NPCN[m]} di dalam`, { door:m, npc:true }) ], 'Kamu resmi memulai usahamu di kota ini.'),
     Q('q2','utama',1,1,'Sapa Pak Udin','Pedagang pasar tahu segalanya tentang kota ini.', [ S('talk:market','Bicara dengan Pak Udin di Pasar', { door:'market', npc:true }) ], 'Pak Udin senang punya langganan baru.', { pre:['q1'] }),
-    Q('q3','utama',1,1,'Kopi Pertama','Kafe adalah tempat warga bertukar kabar.', [ S('talk:cafe','Sapa Mbak Kiki di Kafe', { door:'cafe', npc:true }) ], 'Kopi pertamamu di kota ini terasa enak.', { pre:['q1'] }),
-    Q('q4','utama',1,1,'Rumah Sementara','Lihat tempat tinggalmu. Di sinilah kamu tidur untuk memulai hari berikutnya.', [ S('enter:house','Masuk ke Rumah', { door:'house' }) ], 'Rumah kecil ini akan menjadi saksi banyak cerita.', { pre:['q1'] }),
+    Q('q3','utama',1,1,'Kopi Pertama','Kafe adalah tempat warga bertukar kabar.', [ S('talk:cafe','Sapa Mbak Erma di Kafe', { door:'cafe', npc:true }) ], 'Kopi pertamamu di kota ini terasa enak.', { pre:['q1'] }),
+    Q('q4','utama',1,1,'Rumah Sementara','Lihat tempat tinggalmu. Di sinilah kamu tidur; hari baru dimulai setelah kamu dan pasanganmu tidur bersamaan.', [ S('enter:' + HOME, `Masuk ke ${B[HOME]} (rumahmu)`, { door:HOME }) ], 'Rumah kecil ini akan menjadi saksi banyak cerita.', { pre:['q1'] }),
     Q('q15','sampingan',1,1,'Kenali Dagangan Sendiri','Periksa perlengkapan tempat usahamu.', [ S(m === 'florist' ? 'look:rakbunga' : 'look:rakparts', `Periksa ${RAK} di dalam tempat usahamu`, { door:m }) ], 'Kamu hafal letak barang dagangan.', { pre:['q1'], opt:true }),
     Q('q16','utama',1,1,'Jalan-jalan di Pasar','Lihat-lihat barang dagangan pasar.', [ S('look:stallv','Periksa Lapak Sayur di Pasar', { door:'market' }), S('look:stallf','Periksa Lapak Buah di Pasar', { door:'market' }) ], 'Kamu tahu apa saja yang dijual di pasar.', { pre:['q2'] }),
     Q('q5','sampingan',1,1,'Keranjang yang Hilang','Pak Udin kehilangan keranjang dagangannya. Mungkin tertinggal di taman.',
@@ -76,7 +77,7 @@ const Story = (() => {
       [ S('view:plaza','Lihat air mancur di Alun-alun (tengah kota)'), S('view:park','Lihat kolam di Taman Kota (pojok kanan bawah)') ], 'Kamu mulai hafal jalan-jalan kota.', { pre:['q1'] }),
     Q('q18','sampingan',1,2,'Aroma Kopi','Mesin kopi kafe terkenal seantero kota.', [ S('look:coffee','Periksa Mesin Kopi di Kafe', { door:'cafe' }) ], 'Aromanya melekat di ingatanmu.', { pre:['q3'], opt:true }),
     Q('q10','utama',1,3,'Kabar Burung','Setelah surat itu, warga mulai bergosip soal kalian berdua.',
-      [ S('gossip_cafe','Dengar kabar dari Mbak Kiki di Kafe', { door:'cafe', npc:true }), S('gossip_market','Dengar kabar dari Pak Udin di Pasar', { door:'market', npc:true }) ],
+      [ S('gossip_cafe','Dengar kabar dari Mbak Erma di Kafe', { door:'cafe', npc:true }), S('gossip_market','Dengar kabar dari Pak Udin di Pasar', { door:'market', npc:true }) ],
       'Kamu jadi penasaran dengan pasanganmu.', { pre:['q7'], grants:['will:1'], gnote:'Sikapmu ke Sekolah Sihir bersama pasangan: ENGGAN → RAGU. Kamu tidak lagi menolak berada di sekolah yang sama dengannya.' }),
     Q('q11','utama',1,3,'Pelajaran Pertama','Ikut kelas pertama di Sekolah Sihir.',
       [ S('look:cauldron','Periksa Kuali Ramuan', { door:'school' }), S('look:crystal','Periksa Bola Kristal', { door:'school' }), S('talk:school2','Ajak bicara Kak Rimba (murid senior)', { door:'school', npc:'school2' }) ], 'Sihir ternyata menyenangkan.', { pre:['q7'] }),
@@ -102,7 +103,7 @@ const Story = (() => {
     Q('r6','kerja sama',2,6,'Saling Membantu','Pinjam-meminjam antar dua usaha, dengan perjanjian yang jelas.', [ S('loan_active','Buat atau setujui pinjaman antarpemain (UANG → PINJAMAN)') ], 'Kepercayaan di antara kalian bertambah.'),
     Q('r7','kerja sama',2,6,'Ramuan Bersama','Meracik ramuan butuh dua pasang tangan.', [ S('brew_together','Periksa Kuali Ramuan saat pasanganmu juga berada di sekolah', { door:'school' }) ], 'Ramuan pertama kalian berhasil.',
       { pre:['r5'], grants:['will:3'], gnote:'Sikapmu ke Sekolah Sihir: MAU → AKRAB. Berangkat bersama sudah jadi kebiasaan.' }),
-    Q('r17','utama',2,6,'Saran dari Mbak Kiki','Mbak Kiki hafal rahasia usaha-usaha kecil.', [ S('kiki_tip','Minta saran bisnis dari Mbak Kiki di Kafe', { door:'cafe', npc:true }) ], 'Kamu dapat saran berharga soal pelanggan.', { pre:['r2'] }),
+    Q('r17','utama',2,6,'Saran dari Mbak Erma','Mbak Erma hafal rahasia usaha-usaha kecil.', [ S('kiki_tip','Minta saran bisnis dari Mbak Erma di Kafe', { door:'cafe', npc:true }) ], 'Kamu dapat saran berharga soal pelanggan.', { pre:['r2'] }),
     Q('r18','kerja sama',2,6,'Saling Berkunjung','Lihat dunia kerja pasanganmu dari dekat.', [ S('t6:florist','Berdiri berdekatan dengan pasanganmu di Toko Bunga beberapa detik', { door:'florist' }), S('t6:mechanic','Berdiri berdekatan dengan pasanganmu di Bengkel beberapa detik', { door:'mechanic' }) ], 'Kalian saling memahami pekerjaan masing-masing.', { pre:['q14'] }),
     Q('r8','utama',2,7,'Lima Pesanan','Usahamu makin sibuk.', [ S('rep:5','Selesaikan 5 pesanan (total)', { door:m }) ], 'Pelanggan tetap mulai berdatangan.', { pre:['r4'] }),
     Q('r9','utama',2,7,'Kas Sehat','Usaha yang sehat punya cadangan kas.', [ S('cash:500','Kumpulkan kas usaha hingga 500 KC', { door:m }) ], 'Keuanganmu mulai stabil.', { pre:['r4'] }),
@@ -123,7 +124,7 @@ const Story = (() => {
     Q('c6','kerja sama',3,10,'Cerita di Taman','Kolam taman dan cerita masa kecil.', [ S('t10:park','Berdiri berdekatan dengan pasanganmu di Taman Kota beberapa detik') ], 'Kalian saling bercerita soal masa kecil.'),
     Q('c7','utama',3,10,'Tanya Kak Rimba','Murid senior suka mengamati.', [ S('rimba3','Ngobrol dengan Kak Rimba soal pasanganmu', { door:'school', npc:'school2' }) ], 'Kamu dapat sudut pandang baru.'),
     Q('c8','utama',3,10,'Tanya Bu Arunika','Guru sihir selalu punya nasihat.', [ S('arunika3','Minta nasihat Bu Arunika', { door:'school', npc:'school' }) ], 'Nasihatnya sederhana tapi mengena.'),
-    Q('c9','utama',3,11,'Desas-desus','Ada kabar tak enak yang beredar.', [ S('rumor_udin','Dengar desas-desus dari Pak Udin', { door:'market', npc:true }), S('rumor_kiki','Dengar desas-desus dari Mbak Kiki', { door:'cafe', npc:true }) ], 'Kamu sadar ada salah paham yang harus diluruskan.'),
+    Q('c9','utama',3,11,'Desas-desus','Ada kabar tak enak yang beredar.', [ S('rumor_udin','Dengar desas-desus dari Pak Udin', { door:'market', npc:true }), S('rumor_kiki','Dengar desas-desus dari Mbak Erma', { door:'cafe', npc:true }) ], 'Kamu sadar ada salah paham yang harus diluruskan.'),
     Q('c10','kerja sama',3,11,'Meluruskan Salah Paham','Bicara baik-baik di tempat yang tenang.', [ S('t11:school','Berdiri berdekatan dengan pasanganmu di Sekolah Sihir beberapa detik', { door:'school' }) ], 'Kalian bicara jujur tanpa gengsi.', { pre:['c9'] }),
     Q('c11','kerja sama',3,11,'Minta Maaf','Satu sapaan tulus kadang cukup.', [ S('apology','Sapa pasanganmu sekali lagi dengan tulus (dekati dia, tekan AKSI)', { partner:true }) ], 'Salah paham itu selesai.', { pre:['c9'] }),
     Q('c12','utama',3,11,'Hadiah Penebus','Sebuah hadiah sebagai tanda tulus.', [ S('gs:4','Kirim hadiah ke pasanganmu (total 4 kali)') ], 'Hadiah itu sampai dengan senyum.', { pre:['c9'] }),
@@ -157,7 +158,7 @@ const Story = (() => {
   const D = {
     florist: [
       { when:s => s.own && s.ch >= 3 && s.day() >= 9 && !s.has('mentor_tip3'), flags:['mentor_tip3'], lines:s => [`Soal ${s.partner()}? Kuperhatikan dia suka lewat sini saat sore, sambil melirik bunga-bunga yang paling harum.`,'Orang yang suka hal-hal harum biasanya hatinya lembut. Jangan terlalu keras kepala, ya.'] },
-      { when:s => s.own && !s.has('talk:florist'), lines:['Selamat datang di tokomu sendiri! Aku Bu Mawar, pemasok bunga langgananmu.','Nanti di sini kamu akan merangkai bouquet sesuai pesanan, mengatur stok, lalu menjual dengan harga yang kamu tentukan.','Untuk sekarang, kenali dulu kotamu: Pak Udin di Pasar dan Mbak Kiki di Kafe.','Semangat membuka usaha baru!'] },
+      { when:s => s.own && !s.has('talk:florist'), lines:['Selamat datang di tokomu sendiri! Aku Bu Mawar, pemasok bunga langgananmu.','Nanti di sini kamu akan merangkai bouquet sesuai pesanan, mengatur stok, lalu menjual dengan harga yang kamu tentukan.','Untuk sekarang, kenali dulu kotamu: Pak Udin di Pasar dan Mbak Erma di Kafe.','Semangat membuka usaha baru!'] },
       { when:s => s.own && s.ch >= 2 && s.day() >= 5 && !s.has('supplier_tip'), flags:['supplier_tip'], lines:['Saran dari pemasok: beli bunga secukupnya. Bunga yang menumpuk akan layu dan uangmu ikut layu.','Mulailah dari paket Bouquet Sederhana: bahannya murah dan pelanggannya banyak.'] },
       { when:s => s.own && s.ch >= 2, lines:s => ['Sekarang waktunya berbisnis! Pakai Meja Rangkai untuk membeli bahan dan mengerjakan pesanan.', s.hint()] },
       { when:s => s.own, lines:s => ['Ada yang bisa kubantu lagi?', s.hint()] },
@@ -177,7 +178,7 @@ const Story = (() => {
       { when:s => s.day() >= 3 && s.has('got_letter') && !s.has('gossip_market'), flags:['gossip_market'], lines:s => [`Katanya kamu dapat surat dari Sekolah Sihir? ${s.partner()} juga dapat, lho.`,'Tapi kudengar dia bilang tidak mau berangkat bareng kamu. Hehe, sama-sama gengsi!','Santai saja. Orang yang awalnya enggan sering jadi yang paling kompak belakangan.'] },
       { when:s => s.ch >= 3 && s.day() >= 11 && !s.has('rumor_udin'), flags:['rumor_udin'], lines:s => [`Eh, kamu dengar? Ada yang bilang ${s.partner()} merasa kamu menghindarinya akhir-akhir ini.`,'Aku nggak percaya sih. Tapi kalau benar, lebih baik cepat diluruskan sebelum jadi gosip besar.'] },
       { when:s => s.ch >= 2 && s.day() >= 8 && !s.has('udin_festival'), flags:['udin_festival'], lines:['Kabar baik! Kota akan mengadakan festival sebentar lagi. Pasar ini bakal ramai sekali.','Siapkan stok dan siapkan hati. Festival itu waktu yang bagus buat dekat dengan seseorang, hehe.'] },
-      { when:s => s.has('basket_returned'), lines:['Keranjangku sudah kembali, berkat kamu!','Kalau mau tahu kabar kota, tanya Mbak Kiki di Kafe. Dia tahu semuanya.'] },
+      { when:s => s.has('basket_returned'), lines:['Keranjangku sudah kembali, berkat kamu!','Kalau mau tahu kabar kota, tanya Mbak Erma di Kafe. Dia tahu semuanya.'] },
       { when:() => true, lines:['Keranjangku masih belum ketemu. Coba cek sekitar Taman Kota, ya.'] },
     ],
     cafe: [
@@ -187,7 +188,7 @@ const Story = (() => {
       { when:s => s.dec('intro_night') === 'cafe', lines:['Malam itu di kafeku... aku saksinya, lho! Kalian berdua tampak canggung tapi senang.','Kafe ini akan selalu punya meja untuk kalian.'] },
       { when:s => s.dec('intro_night') === 'taman', lines:['Kudengar kalian berbincang di Taman Kota. Tempat yang tenang, pilihan bagus.','Kapan-kapan mampirlah ke sini, kuseduhkan kopi spesial.'] },
       { when:s => s.dec('intro_night') === 'alun', lines:['Orang-orang bilang kalian berbincang di dekat air mancur alun-alun. Romantis sekali!','Mampirlah ke kafe sebelum pulang, ya.'] },
-      { when:s => !s.has('talk:cafe'), lines:['Selamat datang di Kafe Kota! Aku Kiki.','Kafe ini tempat warga berkumpul. Banyak pelanggan tetap datang dari sini.','Kudengar pemilik toko bunga dan pemilik bengkel akan sering bertemu. Mungkin kalian bisa saling melengkapi?','Oh ya, Pak Lurah di Balai Kota biasanya punya kabar buat warga baru. Mampirlah besok.'] },
+      { when:s => !s.has('talk:cafe'), lines:['Selamat datang di Kafe Kota! Aku Erma.','Kafe ini tempat warga berkumpul. Banyak pelanggan tetap datang dari sini.','Kudengar pemilik toko bunga dan pemilik bengkel akan sering bertemu. Mungkin kalian bisa saling melengkapi?','Oh ya, Pak Lurah di Balai Kota biasanya punya kabar buat warga baru. Mampirlah besok.'] },
       { when:s => s.will() === 1, lines:s => ['Ada kursi yang pas di pojok kafe. Kalau kamu dan ' + s.partner() + ' mau duduk berdekatan sebentar, kopi pertama aku traktir.', s.hint()] },
       { when:() => true, lines:s => ['Kopi hari ini enak sekali!', s.hint()] },
     ],
@@ -267,7 +268,7 @@ const Story = (() => {
     const pick = opt => { for (const q of all) { if (q.opt !== opt || qStatus(q, all) !== 'BERLANGSUNG') continue; const step = q.steps.find(s => !has(s.id)); if (step) return { quest:q, step, ...step.t }; } return null; };
     const main = pick(false); if (main) return main;
     const d = curDay(), left = all.filter(q => q.day === d && !q.opt && !qDone(q));
-    if (!left.length) { const s = canSleep(); return { quest:{ title:'Istirahat' }, step:{ text:s.ok ? `Hari ${d} selesai. Pulang ke Rumah dan tidur di Tempat Tidur (misi sampingan boleh dilanjut dulu)` : s.msg }, door:s.ok ? 'house' : undefined }; }
+    if (!left.length) { const s = canSleep(); return { quest:{ title:'Istirahat' }, step:{ text:s.ok ? `Hari ${d} selesai. Pulang ke rumahmu dan tidur di Tempat Tidur. Hari baru dimulai saat kamu dan pasanganmu tidur bersamaan (misi sampingan boleh dilanjut dulu)` : s.msg }, door:s.ok ? homeId() : undefined }; }
     return pick(true);
   }
 
@@ -299,7 +300,7 @@ const Story = (() => {
   function announceDecision(k) {
     const d = DECISIONS[k], o = d.options.find(o => o.v === decisions[k]); note(`Keputusan cerita: ${d.title} — ${o.label}. ${o.effect}`);
     chapter = Math.max(chapter, d.next); lsSet();
-    if (d.next <= 3) note(`Tidurlah di Rumah untuk memulai Hari ke-${LAST_DAY[d.next - 1] + 1} dan Chapter ${d.next}.`); else note('Chapter 4 segera hadir. Terima kasih sudah bermain sampai sejauh ini!');
+    if (d.next <= 3) note(`Tidurlah di rumah masing-masing (bersamaan!) untuk memulai Hari ke-${LAST_DAY[d.next - 1] + 1} dan Chapter ${d.next}.`); else note('Chapter 4 segera hadir. Terima kasih sudah bermain sampai sejauh ini!');
     cb.chapterCard && cb.chapterCard(d.next);
   }
   function remoteState(row) {
@@ -328,6 +329,6 @@ const Story = (() => {
       decisions:Object.keys(decisions).filter(k => DECISIONS[k]).map(k => ({ title:DECISIONS[k].title, value:PLACE[decisions[k]] || decisions[k] })), log };
   }
   return { init, flag:setFlag, dialogue, objects, target, view, decide, remoteState, note, has, trySleep, will, look, together, greet, landmarks:() => LANDMARKS,
-    chapter:() => chapter, day:curDay, dayInfo:n => DAYS[n], decisionDef:k => DECISIONS[k], chapters:CHAPTERS,
+    chapter:() => chapter, day:curDay, home:homeId, canSleep, dayInfo:n => DAYS[n], decisionDef:k => DECISIONS[k], chapters:CHAPTERS,
     hasAny:() => flags.size > 0, mode:() => mode, isDone:() => decisions.intro_night };
 })();

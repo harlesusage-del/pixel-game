@@ -65,6 +65,8 @@
   <div id="stick"><div id="knob"></div></div>
   <button id="act">AKSI</button>
 
+  <div id="sleepui" class="hidden"><div class="z">Zzz…</div><div id="sleep-msg"></div><button id="sleep-cancel" class="sec">BANGUN</button></div>
+  <div id="fadeblk"><span>Malam berlalu…</span></div>
   <div id="chcard" class="hidden"><div class="n"></div><div class="t"></div><div class="s"></div></div>
 
   <div id="tut" class="overlay hidden"><div class="box">
@@ -75,7 +77,7 @@
     <p><b>Menu:</b> tombol <b>☰</b> di pojok kanan atas membuka info lengkap (kode ruang, pasangan, jam) dan semua tombol: MISI, UANG, PANDUAN, EFEK, ZOOM, LAYAR PENUH, LOBI. Di laptop: J = misi, U = uang, M = menu, Esc = tutup.</p>
     <p><b>MISI:</b> kotak hijau di kiri atas menunjukkan langkah berikutnya (ketuk untuk membuka jurnal). Tombol MISI membuka jurnal (misi, cerita, pesan). Kotak hijau di kiri atas menunjukkan langkah berikutnya, dan panah kuning menunjuk tujuannya.</p>
     <p><b>Efek visual:</b> siang-malam, hujan, kelopak bunga, dan kunang-kunang. Tombol <b>FX</b> mengaktifkan atau mematikannya (mode ringan untuk HP lambat).</p>
-    <p><b>Hari:</b> cerita berjalan per hari. Setelah semua misi wajib hari itu selesai, pulang ke Rumah dan tidur di <b>Tempat Tidur</b> untuk lanjut ke hari berikutnya.</p>
+    <p><b>Hari:</b> cerita berjalan per hari. Setelah semua misi wajib hari itu selesai, pulang ke rumahmu (Rumah Florist / Rumah Mekanik) dan tidur di <b>Tempat Tidur</b>. Hari baru dimulai saat <b>kamu dan pasanganmu tidur bersamaan</b> (di rumah masing-masing). Tekan AKSI untuk bangun lagi.</p>
     <p><b>Host:</b> pembuat dunia menentukan pilihan cerita utama di akhir chapter.</p>
     <p><b>UANG:</b> tombol UANG membuka saldo, pinjaman antarpemain, riwayat, dan reset dunia. Bisnis dikerjakan di meja kerja dalam tempat usahamu (Meja Rangkai / Meja Kerja).</p>
     <button id="tut-ok">MENGERTI</button>
@@ -103,6 +105,13 @@
     <button id="gm-close" class="sec">TUTUP</button>
   </div></div>
 
+  <div id="mini" class="overlay hidden"><div class="box">
+    <h2 id="mini-title"></h2><p id="mini-help"></p>
+    <canvas id="mini-cv" width="160" height="112"></canvas>
+    <div id="mini-msg" class="msg"></div><div id="mini-tray"></div>
+    <button id="mini-cancel" class="sec">BATAL (stok tidak terpakai)</button>
+  </div></div>
+
   <div id="decision" class="overlay hidden"><div class="box">
     <h2 id="d-title"></h2><p id="d-text"></p><div id="d-opts"></div><div id="d-sum" class="hidden"></div><div id="d-msg" class="msg"></div>
     <button id="d-cancel" class="sec">NANTI SAJA</button>
@@ -112,6 +121,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <script src="story.js"></script>
+<script src="minigame.js"></script>
 <script src="econ.js"></script>
 <script src="game.js"></script>
 </body>
