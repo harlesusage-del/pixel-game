@@ -9,19 +9,28 @@ const Story = (() => {
     1: { title:'Awal yang Baru', sub:'Dua orang asing, satu kota kecil, dan sebuah sekolah sihir yang membuat mereka enggan berjalan bersama.' },
     2: { title:'Kota yang Sama', sub:'Usaha mulai berjalan, dan perlahan kalian belajar saling mengandalkan.' },
     3: { title:'Semakin Dekat', sub:'Kebiasaan kecil, salah paham, dan hadiah-hadiah sederhana mendekatkan kalian.' },
-    4: { title:'Membangun Hubungan', sub:'Segera hadir — festival kota menanti kalian berdua.' },
+    4: { title:'Membangun Hubungan', sub:'Dari malam festival, dua hati akhirnya saling jujur.' },
+    5: { title:'Merencanakan Masa Depan', sub:'Mimpi besar, tawaran dari luar kota, dan badai pertama yang menguji kalian.' },
+    6: { title:'Pernikahan', sub:'Anggaran, undangan, restu, dan janji yang diucapkan bersama.' },
+    7: { title:'Rumah Baru', sub:'Segera hadir — kalian memulai kehidupan rumah tangga.' },
   };
   const DAYS = { 1:['Selamat Datang','Kenali tempat usahamu dan warga kota.'], 2:['Kabar dari Balai Kota','Sebuah surat undangan tiba.'], 3:['Antara Enggan dan Penasaran','Kabar burung mulai beredar.'],
     4:['Langkah Pertama Bersama','Mungkinkah kalian melangkah berdampingan?'], 5:['Mulai Berbisnis','Bahan, pesanan, dan kelas sihir.'], 6:['Belajar dan Saling Membantu','Ilmu baru, utang budi baru.'],
     7:['Naik Kelas','Usaha tumbuh, kepercayaan tumbuh.'], 8:['Janji di Sekolah Sihir','Dulu enggan, kini bersama.'], 9:['Kebiasaan Baru','Sarapan, berangkat, dan hadiah kecil.'],
     10:['Mengenal Lebih Dalam','Apa yang sebenarnya disukai pasanganmu?'], 11:['Salah Paham','Desas-desus membuat suasana canggung.'], 12:['Saling Menopang','Membantu usaha satu sama lain.'],
-    13:['Sihir yang Sebenarnya','Kelas besar dan ramuan sempurna.'], 14:['Menjelang Festival','Kota bersiap, hati pun bersiap.'] };
-  const LAST_DAY = { 1:4, 2:8, 3:14 };
+    13:['Sihir yang Sebenarnya','Kelas besar dan ramuan sempurna.'], 14:['Menjelang Festival','Kota bersiap, hati pun bersiap.'],
+    15:['Malam Festival','Lampu-lampu menyala, perasaan pun menyala.'], 16:['Kabar Baik','Orang-orang terdekat mulai tahu.'], 17:['Hari-hari Berdua','Belajar, bekerja, dan bercerita.'], 18:['Hari Libur Berdua','Taman, pasar, dan makan malam.'],
+    19:['Nasihat dan Hadiah','Pasangan baru, pelajaran baru.'], 20:['Mengumumkan Hubungan','Seluruh kota akhirnya tahu.'], 21:['Mimpi Besar','Seperti apa masa depan kalian?'], 22:['Tawaran dari Luar Kota','Sebuah surat mengubah suasana.'],
+    23:['Perang Dingin','Dua orang saling diam.'], 24:['Hati yang Retak','Mencari cara mencairkan es.'], 25:['Duduk Bersama','Bicara tanpa menyela.'], 26:['Berdamai dan Berjanji','Badai itu akhirnya lewat.'],
+    27:['Lamaran','Sebuah pertanyaan besar.'], 28:['Anggaran Pernikahan','Menabung berdua untuk hari besar.'], 29:['Tempat dan Undangan','Memilih tempat dan menyebar kabar.'], 30:['Busana dan Bunga','Persiapan yang makin nyata.'],
+    31:['Persiapan Terakhir','Restu dan gladi.'], 32:['Hari Pernikahan','Dua orang yang dulu enggan, kini menjadi satu.'] };
+  const LAST_DAY = { 1:4, 2:8, 3:14, 4:20, 5:26, 6:32 };
+  const VP = { alun:'plaza', taman:'park', sekolah:'school', kafe:'cafe' }, VN = { plaza:'Alun-alun', park:'Taman Kota', school:'Sekolah Sihir', cafe:'Kafe' };
   const WILL = ['Enggan', 'Ragu', 'Mau', 'Akrab'];
   const LOOK = { 'Kuali Ramuan':['look:cauldron', 3], 'Bola Kristal':['look:crystal', 3], 'Rak Bunga':['look:rakbunga', 1], 'Rak Suku Cadang':['look:rakparts', 1], 'Lapak Sayur':['look:stallv', 1],
     'Lapak Buah':['look:stallf', 1], 'Papan Pengumuman':['look:board', 2], 'Mesin Kopi':['look:coffee', 2], 'Rak Buku Mantra':['look:books', 3], 'Papan Tulis Ajaib':['look:chalk', 3] };
   const LANDMARKS = [ { flag:'view:school', x:552, y:100, r:40 }, { flag:'view:plaza', x:320, y:200, r:56 }, { flag:'view:park', x:552, y:350, r:50 } ];
-  const ORDER = ['intro_night', 'first_outing', 'festival_meet'];
+  const ORDER = ['intro_night', 'first_outing', 'festival_meet', 'couple_ritual', 'proposal_place', 'wedding_venue', 'first_home_wish'];
   const DECISIONS = {
     intro_night: { title:'Malam Perkenalan', req:'ch1:done', next:2,
       text:'Chapter 1 selesai: kalian berhasil melangkah ke Sekolah Sihir bersama. Sebagai host, tentukan di mana malam itu kalian berbincang santai untuk pertama kalinya. Pilihan ini membekas dalam cerita dan dialog warga.',
@@ -38,13 +47,32 @@ const Story = (() => {
       options:[ { v:'alun', label:'Alun-alun', effect:'Di bawah lampu-lampu festival, dekat air mancur.' },
         { v:'taman', label:'Taman Kota', effect:'Di tepi kolam, jauh dari keramaian.' },
         { v:'sekolah', label:'Sekolah Sihir', effect:'Di depan gerbang sekolah tempat segalanya dimulai.' } ] },
+    couple_ritual: { title:'Kebiasaan Pasangan', req:'ch4:done', next:5,
+      text:'Chapter 4 selesai: kalian resmi menjadi pasangan dan seluruh kota tahu. Sebagai host, tentukan kebiasaan kecil yang kalian jaga sebagai pasangan.',
+      options:[ { v:'makan_malam', label:'Makan malam berdua', effect:'Tiap malam kalian menyempatkan makan bersama. Mbak Erma selalu menyiapkan meja.' },
+        { v:'jalan_pagi', label:'Jalan pagi di taman', effect:'Kalian memulai hari dengan berjalan berdua di Taman Kota.' },
+        { v:'kelas_malam', label:'Belajar sihir di kelas malam', effect:'Kalian rajin ikut kelas sihir malam bersama.' } ] },
+    proposal_place: { title:'Tempat Lamaran', req:'ch5:done', next:6,
+      text:'Chapter 5 selesai: badai itu lewat dan kalian berdamai. Sebagai host, tentukan di mana lamaran akan terjadi.',
+      options:[ { v:'taman', label:'Taman Kota', effect:'Di tepi kolam saat senja.' }, { v:'alun', label:'Alun-alun', effect:'Di dekat air mancur, disaksikan lampu kota.' },
+        { v:'sekolah', label:'Sekolah Sihir', effect:'Di tempat segalanya dimulai.' }, { v:'kafe', label:'Kafe', effect:'Di meja pojok yang selalu menjadi milik kalian.' } ] },
+    wedding_venue: { title:'Tempat Pernikahan', req:'engaged', next:6,
+      text:'Kalian bertunangan! Sebagai host, tentukan tempat pernikahan, sesuai anggaran yang sudah kalian sepakati berdua.',
+      options:[ { v:'taman', label:'Taman Kota', effect:'Pernikahan di tepi kolam, dikelilingi pohon dan bunga.' }, { v:'alun', label:'Alun-alun', effect:'Pernikahan di jantung kota, disaksikan seluruh warga.' },
+        { v:'sekolah', label:'Sekolah Sihir', effect:'Pernikahan bernuansa sihir, dengan lentera-lentera ajaib.' } ] },
+    first_home_wish: { title:'Impian Rumah Pertama', req:'ch6:done', next:7,
+      text:'Kalian resmi menikah! Sebagai host, tentukan impian lokasi rumah pertama kalian (untuk chapter berikutnya).',
+      options:[ { v:'dekat_taman', label:'Dekat Taman Kota', effect:'Rumah dengan pemandangan kolam dan pepohonan.' }, { v:'dekat_alun', label:'Dekat Alun-alun', effect:'Rumah di tengah keramaian kota.' },
+        { v:'dekat_sekolah', label:'Dekat Sekolah Sihir', effect:'Rumah di sudut tenang dekat sekolah.' } ] },
   };
-  const PLACE = { cafe:'Kafe Kota', taman:'Taman Kota', alun:'Alun-alun', sekolah:'Sekolah Sihir' };
+  const PLACE = { cafe:'Kafe Kota', taman:'Taman Kota', alun:'Alun-alun', sekolah:'Sekolah Sihir', kafe:'Kafe', makan_malam:'Makan malam berdua', jalan_pagi:'Jalan pagi di taman', kelas_malam:'Belajar sihir di kelas malam', dekat_taman:'Dekat Taman Kota', dekat_alun:'Dekat Alun-alun', dekat_sekolah:'Dekat Sekolah Sihir' };
 
   let flags = new Set(), chapter = 1, decisions = {}, role = 'florist', isHost = false, key = '', mode = 'local', opts = {}, cb = {}, log = [];
   const has = f => flags.has(f);
   const other = () => role === 'florist' ? 'mechanic' : 'florist';
   const homeId = () => role === 'florist' ? 'house_f' : 'house_m';
+  const vplace = k => VP[decisions[k]] || 'plaza';
+  const strained = () => chapter >= 5 && (has('quarrel') || has('quarrel_recv')) && !(has('ice_broken') || has('ice_recv'));
   const will = () => has('will:3') ? 3 : has('will:2') ? 2 : has('will:1') ? 1 : 0;
   const curDay = () => { let d = 1; for (const f of flags) if (f.startsWith('day:')) d = Math.max(d, Number(f.slice(4)) || 1); return d; };
   const partner = () => (opts.partnerName && opts.partnerName()) || 'pasanganmu';
@@ -55,7 +83,7 @@ const Story = (() => {
   // ---------------- Daftar misi ----------------
   const Q = (id, cat, ch, day, title, desc, steps, reward, x = {}) => ({ id, cat, ch, day, title, desc, steps, reward, pre:x.pre || [], start:x.start, opt:!!x.opt, grants:x.grants || [], gnote:x.gnote });
   const S = (id, text, t = {}) => ({ id, text, t });
-  const quests = () => { const m = role, o = other(), B = NAMES, MJ = m === 'florist' ? 'Meja Rangkai' : 'Meja Kerja', RAK = m === 'florist' ? 'Rak Bunga' : 'Rak Suku Cadang', HOME = m === 'florist' ? 'house_f' : 'house_m'; const L = [
+  const quests = () => { const m = role, o = other(), B = NAMES, MJ = m === 'florist' ? 'Meja Rangkai' : 'Meja Kerja', RAK = m === 'florist' ? 'Rak Bunga' : 'Rak Suku Cadang', HOME = m === 'florist' ? 'house_f' : 'house_m', V1 = vplace('festival_meet'), V2 = vplace('proposal_place'), V3 = vplace('wedding_venue'), MN = NPCN[m]; const L = [
     // ================= CHAPTER 1 (hari 1-4) =================
     Q('q1','utama',1,1,'Hari Pertama di Kota','Kenali tempat usahamu dan sapa pemasok langgananmu.',
       [ S('enter:' + m, `Masuk ke ${B[m]} (tempat usahamu)`, { door:m }), S('talk:' + m, `Ajak bicara ${NPCN[m]} di dalam`, { door:m, npc:true }) ], 'Kamu resmi memulai usahamu di kota ini.'),
@@ -140,6 +168,73 @@ const Story = (() => {
     Q('c22','utama',3,14,'Kabar Festival','Pak Lurah ingin bicara dengan kalian berdua.', [ S('festival_hall','Temui Pak Lurah bersama pasanganmu di Balai Kota (berdekatan)', { door:'hall', npc:true }) ], 'Festival kota sebentar lagi.'),
     Q('c23','kerja sama',3,14,'Persiapan Bersama','Berbelanja untuk festival.', [ S('t14:market','Berdiri berdekatan dengan pasanganmu di Pasar beberapa detik', { door:'market' }) ], 'Perlengkapan festival siap.'),
     Q('c24','kerja sama',3,14,'Janji di Alun-alun','Malam sebelum festival, di bawah lampu kota.', [ S('t14:plaza','Berdiri berdekatan dengan pasanganmu di Alun-alun beberapa detik') ], 'Kalian berjanji bertemu lagi pada hari festival.'),
+  ); if (chapter >= 4) L.push(
+    // ================= CHAPTER 4 (hari 15-20): MEMBANGUN HUBUNGAN =================
+    Q('e1','kerja sama',4,15,'Menuju Malam Festival',`Malam festival tiba. Temui pasanganmu di tempat yang kalian janjikan: ${VN[V1]}.`, [ S('t15:' + V1, `Berdiri berdekatan dengan pasanganmu di ${VN[V1]} beberapa detik (tempat janji festival)`) ], 'Lampu-lampu festival menyala di atas kalian.'),
+    Q('e2','utama',4,15,'Keramaian Festival','Sapa warga di tengah keramaian.', [ S('fest_udin','Sapa Pak Udin di Pasar', { door:'market', npc:true }), S('fest_erma','Sapa Mbak Erma di Kafe', { door:'cafe', npc:true }), S('fest_lurah','Sapa Pak Lurah di Balai Kota', { door:'hall', npc:true }) ], 'Festival terasa meriah.'),
+    Q('e3','kerja sama',4,15,'Pengakuan','Malam ini terasa tepat untuk jujur pada perasaan.', [ S('confess','Sampaikan perasaanmu: dekati pasangan di tempat janji, tekan AKSI', { partner:true }), S('confess_recv','Dengarkan pengakuan pasanganmu (dia harus menyapamu)') ], 'Kalian saling mengerti perasaan masing-masing.',
+      { pre:['e1'], grants:['dating'], gnote:'Hubungan kalian: Teman → MENJALIN HUBUNGAN. 💞' }),
+    Q('e4','utama',4,16,'Kabar Baik','Orang-orang terdekat mulai tahu.', [ S('react_mentor', `Ceritakan pada ${MN}`, { door:m, npc:true }), S('react_udin','Ceritakan pada Pak Udin', { door:'market', npc:true }), S('react_erma','Ceritakan pada Mbak Erma', { door:'cafe', npc:true }) ], 'Semua ikut berbahagia.'),
+    Q('e5','kerja sama',4,16,'Kencan Malam Pertama','Alun-alun paling indah saat malam.', [ S('t16:plaza_night','Berdiri berdekatan dengan pasanganmu di Alun-alun pada malam hari (setelah sekitar pukul 19:00)') ], 'Kencan pertama yang manis.'),
+    Q('e6','utama',4,16,'Hadiah untuk Kekasih','Hadiah kecil sebagai pasangan.', [ S('gs:5','Kirim hadiah ke pasanganmu (total 5 kali)') ], 'Dia tersenyum menerimanya.'),
+    Q('e7','kerja sama',4,17,'Kelas Berdua','Belajar sihir sambil bergandengan.', [ S('t17:school','Berdiri berdekatan dengan pasanganmu di Sekolah Sihir beberapa detik', { door:'school' }) ], 'Kelas terasa lebih hangat.'),
+    Q('e8','utama',4,17,'Delapan Belas Pesanan','Usaha tetap harus jalan.', [ S('rep:18','Selesaikan 18 pesanan (total)', { door:m }) ], 'Usahamu stabil di tengah hati yang berbunga-bunga.'),
+    Q('e9','kerja sama',4,17,'Berbagi Cerita','Ngopi dan bercerita.', [ S('t17:cafe','Berdiri berdekatan dengan pasanganmu di Kafe beberapa detik', { door:'cafe' }) ], 'Kalian bercerita sampai larut.'),
+    Q('e10','kerja sama',4,18,'Piknik di Taman','Hari libur berdua.', [ S('t18:park','Berdiri berdekatan dengan pasanganmu di Taman Kota beberapa detik') ], 'Piknik sederhana yang berkesan.'),
+    Q('e11','kerja sama',4,18,'Belanja Bareng','Belanja jadi ajang bercanda.', [ S('t18:market','Berdiri berdekatan dengan pasanganmu di Pasar beberapa detik', { door:'market' }) ], 'Pak Udin geleng-geleng sambil tersenyum.'),
+    Q('e12','kerja sama',4,18,'Makan Malam di Kafe','Makan malam romantis.', [ S('t18:cafe_night','Berdiri berdekatan dengan pasanganmu di Kafe pada malam hari (setelah sekitar pukul 19:00)', { door:'cafe' }) ], 'Makan malam yang hangat.'),
+    Q('e13','utama',4,19,'Nasihat Guru Sihir','Pasangan baru butuh nasihat.', [ S('couple_tip_a','Minta nasihat Bu Arunika', { door:'school', npc:'school' }), S('couple_tip_r','Minta nasihat Kak Rimba', { door:'school', npc:'school2' }) ], 'Nasihat-nasihat itu berguna.'),
+    Q('e14','utama',4,19,'Hadiah Romantis','Satu hadiah lagi.', [ S('gs:6','Kirim hadiah ke pasanganmu (total 6 kali)') ], 'Kejutan kecil yang manis.'),
+    Q('e15','utama',4,19,'Kas Seribu Lima Ratus','Masa depan butuh modal.', [ S('cash:1500','Kumpulkan kas usaha hingga 1.500 KC', { door:m }) ], 'Kas usaha yang tebal menenangkan.'),
+    Q('e16','utama',4,20,'Kabar untuk Pak Lurah','Beri tahu kota secara resmi.', [ S('announce','Umumkan hubunganmu pada Pak Lurah di Balai Kota', { door:'hall', npc:true }) ], 'Seluruh kota tahu.'),
+    Q('e17','kerja sama',4,20,'Foto Bersama','Abadikan momen.', [ S('t20:plaza','Berdiri berdekatan dengan pasanganmu di Alun-alun beberapa detik') ], 'Foto yang akan selalu kalian simpan.'),
+    Q('e18','kerja sama',4,20,'Janji Setia','Janji kecil di bawah lampu kota.', [ S('loyal','Berjanji setia: dekati pasangan di Alun-alun, tekan AKSI', { partner:true }), S('loyal_recv','Terima janji setia pasanganmu') ], 'Kalian berjanji saling setia.', { pre:['e17'] }),
+  ); if (chapter >= 5) L.push(
+    // ================= CHAPTER 5 (hari 21-26): MERENCANAKAN MASA DEPAN & BADAI =================
+    Q('f1','utama',5,21,'Mimpi Besar','Seperti apa masa depan yang kalian bayangkan?', [ S('dream_mentor', `Bicara soal masa depan dengan ${MN}`, { door:m, npc:true }), S('dream_arunika','Bicara soal masa depan dengan Bu Arunika', { door:'school', npc:'school' }) ], 'Mimpimu makin jelas.'),
+    Q('f2','kerja sama',5,21,'Tabungan Bersama','Mulailah menabung untuk tujuan bersama.', [ S('fam_open','Buka Tabungan Bersama (UANG → TABUNGAN)'), S('fam_in:100','Setor minimal 100 KC ke tabungan bersama (setoran milikmu sendiri)') ], 'Tabungan bersama terbuka. Uangnya milik berdua, bukan milik satu pihak.'),
+    Q('f3','utama',5,21,'Dua Puluh Pesanan','Usaha tetap prioritas.', [ S('rep:20','Selesaikan 20 pesanan (total)', { door:m }) ], 'Reputasimu terus naik.'),
+    Q('f4','utama',5,22,'Surat Tawaran','Ada kabar dari luar kota.', [ S('offer_letter','Ambil surat dari Pak Lurah di Balai Kota', { door:'hall', npc:true }) ], 'Kamu membaca tawaran itu berulang kali.'),
+    Q('f5','utama',5,22,'Meminta Nasihat','Tawaran besar, hati bimbang.', [ S('arunika_offer','Minta nasihat Bu Arunika', { door:'school', npc:'school' }) ], 'Nasihatnya tenang tapi tegas.'),
+    Q('f6','kerja sama',5,22,'Pertengkaran Pertama','Tawaran itu bisa memisahkan kalian.', [ S('quarrel','Bicarakan tawaran itu dengan pasanganmu (dekati dia, tekan AKSI)', { partner:true }), S('quarrel_recv','Pasanganmu mengajakmu bicara soal tawaran itu') ], 'Pembicaraan itu berubah menjadi pertengkaran.', { pre:['f4'] }),
+    Q('f7','utama',5,23,'Tanya Mbak Erma','Hubungan kalian sedang goyah. Dengarkan orang yang peduli.', [ S('erma_strain','Minta pendapat Mbak Erma di Kafe', { door:'cafe', npc:true }) ], 'Mbak Erma menenangkanmu.'),
+    Q('f8','utama',5,23,'Tanya Pak Lurah','Orang yang lebih tua sering melihat lebih jauh.', [ S('lurah_strain','Minta pendapat Pak Lurah di Balai Kota', { door:'hall', npc:true }) ], 'Pak Lurah bercerita soal masa mudanya.'),
+    Q('f9','utama',5,23,'Tanya Bu Arunika','Mungkin sihir tak bisa menyelesaikan ini, tapi nasihatnya bisa.', [ S('arunika_strain','Minta pendapat Bu Arunika di Sekolah Sihir', { door:'school', npc:'school' }) ], 'Kamu mulai melihat dari sisi pasanganmu.'),
+    Q('f10','utama',5,23,'Menjaga Usaha','Kesal bukan alasan menelantarkan pelanggan.', [ S('rep:22','Selesaikan 22 pesanan (total)', { door:m }) ], 'Pekerjaan sedikit menenangkan pikiran.'),
+    Q('f11','utama',5,24,'Hadiah Permintaan Maaf','Kadang maaf perlu dibuktikan.', [ S('gs:7','Kirim hadiah permintaan maaf ke pasanganmu (total 7 kali)') ], 'Hadiah itu terkirim dengan hati berdebar.'),
+    Q('f12','kerja sama',5,24,'Mencairkan Es','Sapa dia dengan tulus setelah mendengar semua nasihat.',
+      [ S('ice_broken','Sapa pasanganmu dengan tulus (butuh nasihat Erma, Lurah, Arunika, dan hadiah ke-7)', { partner:true }), S('ice_recv','Terima sapaan tulus dari pasanganmu') ], 'Es di antara kalian mulai mencair.', { pre:['f7','f8','f9','f11'] }),
+    Q('f13','utama',5,24,'Kas Seribu Delapan Ratus','Keuangan sehat menenangkan hati.', [ S('cash:1800','Kumpulkan kas usaha hingga 1.800 KC', { door:m }) ], 'Kamu lebih tenang menghadapi pilihan.'),
+    Q('f14','kerja sama',5,25,'Bicara di Taman','Bicara jujur tanpa menyela.', [ S('t25:park','Berdiri berdekatan dengan pasanganmu di Taman Kota beberapa detik') ], 'Kalian saling mendengarkan.', { pre:['f12'] }),
+    Q('f15','kerja sama',5,25,'Bicara di Sekolah','Tempat segalanya bermula.', [ S('t25:school','Berdiri berdekatan dengan pasanganmu di Sekolah Sihir beberapa detik', { door:'school' }) ], 'Kalian mengingat awal pertemuan.', { pre:['f12'] }),
+    Q('f16','kerja sama',5,25,'Tabungan Masa Depan','Menabung bersama tanda kalian serius.', [ S('fam_tot:300','Total setoran tabungan bersama mencapai 300 KC') ], 'Tabungan kalian terus bertumbuh.', { pre:['f2'] }),
+    Q('f17','kerja sama',5,26,'Berdamai','Saatnya benar-benar berdamai.',
+      [ S('t26:plaza','Berdiri berdekatan dengan pasanganmu di Alun-alun beberapa detik'), S('peace','Berdamai: dekati pasangan di Alun-alun, tekan AKSI', { partner:true }), S('peace_recv','Terima perdamaian dari pasanganmu') ],
+      'Kalian berdamai dan memutuskan menyelesaikan tawaran itu bersama.', { pre:['f12'], grants:['reconciled'], gnote:'Badai itu lewat. Kepercayaan kalian justru makin kuat.' }),
+    Q('f18','utama',5,26,'Restu Masa Depan','Kabar baik dibagi pada orang terdekat.', [ S('promise_lurah','Ceritakan rencana kalian pada Pak Lurah', { door:'hall', npc:true }), S('promise_mentor', `Ceritakan rencana kalian pada ${MN}`, { door:m, npc:true }) ], 'Mereka memberi restu dengan senyum.'),
+    Q('f19','kerja sama',5,26,'Rayakan di Kafe','Rayakan perdamaian.', [ S('t26:cafe','Berdiri berdekatan dengan pasanganmu di Kafe beberapa detik', { door:'cafe' }) ], 'Kopi paling enak setelah badai.', { pre:['f17'] }),
+  ); if (chapter >= 6) L.push(
+    // ================= CHAPTER 6 (hari 27-32): PERNIKAHAN =================
+    Q('w1','kerja sama',6,27,'Menuju Tempat Lamaran','Tempat yang dipilih host untuk momen istimewa.', [ S('t27:' + V2, `Berdiri berdekatan dengan pasanganmu di ${VN[V2]} beberapa detik`) ], 'Suasana mendadak hening dan penuh debar.'),
+    Q('w2','kerja sama',6,27,'Lamaran','Waktunya melamar.', [ S('proposal','Lamar pasanganmu: dekati dia di tempat itu, tekan AKSI', { partner:true }), S('proposal_recv','Terima lamaran pasanganmu') ], 'Kalian bertunangan.',
+      { pre:['w1'], grants:['engaged'], gnote:'Hubungan kalian: MERENCANAKAN PERNIKAHAN. 💍' }),
+    Q('w3','utama',6,27,'Kabar Bahagia','Orang-orang akan sangat senang.', [ S('joy_erma','Kabari Mbak Erma', { door:'cafe', npc:true }), S('joy_udin','Kabari Pak Udin', { door:'market', npc:true }) ], 'Seluruh kota bersorak.', { pre:['w2'] }),
+    Q('w4','kerja sama',6,28,'Modal Pernikahan','Setiap orang menyumbang.', [ S('fam_in:300','Setor total minimal 300 KC ke tabungan bersama (setoran milikmu sendiri)') ], 'Kalian saling menopang.'),
+    Q('w5','kerja sama',6,28,'Anggaran Terkumpul','Pernikahan butuh biaya.', [ S('fam_tot:800','Total setoran tabungan bersama mencapai 800 KC') ], 'Anggaran mulai terkumpul.', { pre:['w4'] }),
+    Q('w6','kerja sama',6,28,'Gedung dan Tempat','Ajukan pengeluaran; pasangan harus menyetujuinya.', [ S('fam:gedung','Ajukan dan setujui pengeluaran "Gedung" min. 100 KC (UANG → TABUNGAN)') ], 'Tempat pernikahan terjamin.', { pre:['w5'] }),
+    Q('w7','utama',6,29,'Memilih Tempat Pernikahan','Host menentukan tempat pernikahan.', [ S('venue_chosen','Host memilih tempat pernikahan (MISI → CERITA)') ], 'Tempatnya sudah ditentukan.', { pre:['w2'] }),
+    Q('w8','kerja sama',6,29,'Dekorasi','Hias tempatnya.', [ S('fam:dekorasi','Ajukan dan setujui pengeluaran "Dekorasi" min. 100 KC') ], 'Dekorasinya cantik.', { pre:['w5'] }),
+    Q('w9','utama',6,29,'Undang Warga','Undang orang-orang tersayang.', [ S('inv_udin','Undang Pak Udin', { door:'market', npc:true }), S('inv_erma','Undang Mbak Erma', { door:'cafe', npc:true }), S('inv_lurah','Undang Pak Lurah', { door:'hall', npc:true }), S('inv_arunika','Undang Bu Arunika', { door:'school', npc:'school' }) ], 'Undangan tersebar.', { pre:['w2'] }),
+    Q('w10','kerja sama',6,30,'Busana dan Jamuan','Pakaian dan hidangan.', [ S('fam:busana','Ajukan dan setujui "Busana" min. 100 KC'), S('fam:jamuan','Ajukan dan setujui "Jamuan" min. 100 KC') ], 'Semua siap.', { pre:['w5'] }),
+    Q('w11','utama',6,30,'Pesanan Spesial', `Buat sendiri ${m === 'florist' ? 'bouquet pengantinmu' : 'dekorasi motor pengantinmu'}.`, [ S('wedding_item', `Kerjakan pesanan spesial pernikahan di ${MJ} (BISNIS → PESANAN SPESIAL PERNIKAHAN)`, { door:m }) ], 'Karya terbaikmu untuk hari istimewa.'),
+    Q('w12','utama',6,30,'Dua Puluh Lima Pesanan','Usaha tak boleh berhenti.', [ S('rep:25','Selesaikan 25 pesanan (total)', { door:m }) ], 'Usahamu kokoh.'),
+    Q('w13','utama',6,31,'Restu Para Mentor','Pamit pada orang yang membimbing kalian.', [ S('bless_florist','Minta restu Bu Mawar di Toko Bunga', { door:'florist', npc:true }), S('bless_mechanic','Minta restu Pak Bimo di Bengkel', { door:'mechanic', npc:true }) ], 'Restu mereka menghangatkan hati.'),
+    Q('w14','kerja sama',6,31,'Cek Tempat','Gladi sehari sebelum hari-H.', [ S('t31:' + V3, `Berdiri berdekatan dengan pasanganmu di ${VN[V3]} beberapa detik`) ], 'Semua sudah siap.', { pre:['w7'] }),
+    Q('w15','utama',6,31,'Kas Pernikahan','Cadangan tak boleh tipis.', [ S('cash:2000','Kumpulkan kas usaha hingga 2.000 KC', { door:m }) ], 'Kamu tenang menyambut hari bahagia.'),
+    Q('w16','kerja sama',6,32,'Menuju Pelaminan','Hari-H tiba.', [ S('t32:' + V3, `Berdiri berdekatan dengan pasanganmu di ${VN[V3]} beberapa detik`) ], 'Seluruh warga hadir.', { pre:['w14'] }),
+    Q('w17','kerja sama',6,32,'Ucapkan Janji','Janji pernikahan.', [ S('vow_given','Ucapkan janji: dekati pasangan di tempat pernikahan, tekan AKSI', { partner:true }), S('vow_recv','Dengarkan janji pasanganmu') ], 'Kalian resmi menikah.',
+      { pre:['w16'], grants:['wedding_done'], gnote:'Hubungan kalian: MENIKAH. 💒' }),
+    Q('w18','utama',6,32,'Menyapa Para Tamu','Terima ucapan selamat.', [ S('wed_lurah','Terima ucapan dari Pak Lurah', { door:'hall', npc:true }), S('wed_udin','Terima ucapan dari Pak Udin', { door:'market', npc:true }), S('wed_erma','Terima ucapan dari Mbak Erma', { door:'cafe', npc:true }), S('wed_arunika','Terima ucapan dari Bu Arunika', { door:'school', npc:'school' }) ], 'Pesta berjalan meriah.', { pre:['w17'] }),
   ); return L; };
 
   const qDone = q => q.steps.every(s => has(s.id));
@@ -225,6 +320,53 @@ const Story = (() => {
       { when:() => true, lines:s => ['Kalian sudah jadi pasangan murid favoritku.', s.hint()] },
     ],
   };
+  // ---- Dialog Chapter 4-6: satu kali per penanda, pada hari yang sesuai ----
+  const RL = (flag, ch, day, lines, cond) => ({ when:s => s.ch >= ch && s.day() >= day && !s.has(flag) && (!cond || cond(s)), flags:[flag], lines });
+  const dating = s => s.has('dating'), engaged = s => s.has('engaged'), quarrelled = s => s.has('quarrel') || s.has('quarrel_recv');
+  const RIT = { makan_malam:'Kalian rutin makan malam berdua di sini. Aku sampai hafal pesanan kalian!', jalan_pagi:'Kalian sering jalan pagi di taman berdua. Aku lihat dari jendela kafe, manis sekali.', kelas_malam:'Kalian rajin ikut kelas sihir malam berdua. Pulangnya selalu mampir beli kopi, hehe.' };
+  D.market.unshift(
+    RL('fest_udin',4,15,['Malam festival! Pasar ramai sekali.','Kulihat kalian berdua datang. Semoga malam ini jadi malam yang kalian ingat lama, hehe.']),
+    RL('react_udin',4,16,s => ['Hah?! Kalian jadian?! Aku sudah curiga sejak kalian berdua beli bahan dengan wajah merah!','Selamat, ya. Kalau butuh bunga atau suku cadang buat kencan, kasih tahu aku.'], dating),
+    RL('joy_udin',6,27,s => [`Bertunangan?! ${s.partner()} menerima lamaranmu?!`,'Seluruh pasar kuberi kabar! Hari ini semua dagangan kudiskon sedikit, hehe.'], engaged),
+    RL('inv_udin',6,29,['Undangan pernikahan? Aku pasti datang. Aku sudah siapkan buah segar untuk jamuan.'], engaged),
+    RL('wed_udin',6,32,['Selamat, pengantin baru! Inilah hari yang kutunggu sejak melihat kalian pertama kali jalan sendiri-sendiri di pasar.','Semoga langgeng!'], engaged));
+  D.cafe.unshift(
+    RL('fest_erma',4,15,['Malam festival! Meja-mejaku penuh. Tapi untuk kalian, selalu ada ruang.','Aku punya firasat malam ini akan terjadi sesuatu.']),
+    RL('react_erma',4,16,s => ['Aku sudah menduga! Lihat saja, kalian berdua senyum-senyum sendiri.','Selamat ya. Kopi pertama sebagai pasangan, kutraktir.'], dating),
+    RL('erma_strain',5,23,s => [`Kudengar kamu dan ${s.partner()} bertengkar soal tawaran dari luar kota. Duduklah.`,'Aku tidak akan bilang siapa yang benar. Tapi coba bayangkan: kalau dia pergi, apa yang kamu rasakan?','Marah itu wajar. Diam selamanya itu yang berbahaya. Kirimkan hadiah kecil, lalu sapa dia dengan tulus.'], quarrelled),
+    RL('joy_erma',6,27,s => ['Bertunangan! Astaga, aku harus duduk dulu!','Kafe ini akan jadi tempat reuni kalian setiap tahun. Aku janji.'], engaged),
+    RL('inv_erma',6,29,['Aku akan mengurus kopi dan kue untuk tamu. Jangan khawatir, serahkan saja padaku.'], engaged),
+    RL('wed_erma',6,32,['Kalian cantik dan tampan sekali! Aku tidak kuat, aku menangis!','Selamat menempuh hidup baru.'], engaged),
+    { when:s => s.ch >= 5 && s.dec('couple_ritual') === 'makan_malam', lines:[RIT.makan_malam] },
+    { when:s => s.ch >= 5 && s.dec('couple_ritual') === 'jalan_pagi', lines:[RIT.jalan_pagi] },
+    { when:s => s.ch >= 5 && s.dec('couple_ritual') === 'kelas_malam', lines:[RIT.kelas_malam] });
+  D.hall.unshift(
+    RL('fest_lurah',4,15,['Selamat datang di festival kota! Silakan menikmati malam ini.','Kota ini beruntung punya warga seperti kalian berdua.']),
+    RL('announce',4,20,s => [`Saya sudah dengar kabar baiknya. Kamu dan ${s.partner()}, bukan?`,'Hubungan yang dimulai dari saling enggan sering justru yang paling kuat. Selamat!','Kota ini akan menjaga kebahagiaan kalian.'], dating),
+    RL('offer_letter',5,22,s => ['Ini surat untukmu, dari kota seberang. Mereka tertarik pada usahamu dan menawarkan tempat, modal, dan nama besar.',`Pasanganmu menerima surat serupa dari kota lain. Aku tidak tahu isinya, tapi aku bisa menebak: ${s.partner()} juga bimbang.`,'Pikirkan baik-baik, tapi jangan putuskan sendirian.']),
+    RL('lurah_strain',5,23,s => ['Kamu terlihat murung. Pertengkaran?','Saat muda, saya juga pernah hampir kehilangan seseorang karena terlalu keras kepala. Bedanya, saya terlambat sadar.','Jangan menunggu terlambat. Cari jalan tengah dan sapa dia dengan tulus.'], quarrelled),
+    RL('promise_lurah',5,26,s => ['Kalian sudah berdamai? Syukurlah.','Dengar, kota ini selalu mendukung kalian apa pun keputusannya. Mau tinggal atau mau pergi, kalian tetap warga kami.'], s => s.has('ice_broken') || s.has('ice_recv')),
+    RL('inv_lurah',6,29,['Undangan pernikahan! Dengan senang hati saya hadir, dan saya sendiri yang akan menyiapkan sambutan.'], engaged),
+    RL('wed_lurah',6,32,s => ['Atas nama seluruh warga, saya ucapkan selamat atas pernikahan kalian.','Dari dua orang yang enggan berjalan bersama, kini menjadi satu keluarga. Itulah kisah kota ini.'], engaged));
+  D.school.unshift(
+    RL('couple_tip_a',4,19,s => [`Pasangan baru, ya. ${s.partner()} dan kamu cocok sekali.`,'Nasihat sihir yang paling jarang disebut: dengarkan dulu, baru bicara. Itu mantra yang paling ampuh.'], dating),
+    RL('dream_arunika',5,21,s => ['Masa depan? Sihir kecil tidak bisa meramalnya, tapi bisa membantu kita menghadapinya.','Mulailah dengan tujuan bersama. Tabungan kecil yang dikumpulkan berdua lebih kuat dari tabungan besar yang dikumpulkan sendiri.']),
+    RL('arunika_offer',5,22,s => ['Tawaran dari luar kota? Selamat, itu tanda kamu berkembang.','Tapi ingat: tawaran terbaik adalah yang tak membuatmu harus memilih antara karier dan orang yang kamu sayang.','Bicarakan dengan pasanganmu, tenang saja.']),
+    RL('arunika_strain',5,23,s => [`Kudengar kamu dan ${s.partner()} sedang saling diam. Tidak apa-apa. Diam itu bukan akhir.`,'Sihir tidak bisa memaksa hati. Tapi aku tahu satu hal: orang yang masih peduli akan selalu menunggu di pintu.','Dengarkan nasihat orang lain, kirim hadiah, lalu sapa dia.'], quarrelled),
+    RL('inv_arunika',6,29,['Pernikahan! Murid-muridku akan menyalakan lentera sihir di sepanjang jalan.'], engaged),
+    RL('wed_arunika',6,32,s => ['Aku masih ingat hari pertama kalian di sekolahku. Siapa sangka akan sampai di sini.','Selamat. Sihir paling indah yang pernah kulihat adalah dua orang yang akhirnya saling memilih.'], engaged));
+  D.school2.unshift(RL('couple_tip_r',4,19,s => [`Wah, kamu dan ${s.partner()} sekarang pasangan? Dulu kalian cemberut tiap lewat pintu ini!`,'Tips dariku: jangan lupa tertawa bersama. Itu bumbu hubungan.'], dating));
+  D.florist.unshift(
+    RL('react_mentor',4,16,s => ['Wah, kabar yang indah! Aku sudah lihat dia lewat sini tiap sore, ternyata ada maunya, hehe.','Selamat ya. Kalau perlu bunga untuk kencan, ambil yang segar.'], s => s.own && dating(s)),
+    RL('dream_mentor',5,21,s => ['Masa depan, ya. Aku dulu juga punya mimpi besar sebelum membuka toko ini.','Kalau kamu bahagia dan tahu kamu tidak sendirian, mimpi apa pun jadi mungkin.'], s => s.own),
+    RL('promise_mentor',5,26,s => ['Kalian sudah berdamai! Aku lega sekali. Tokoku selalu ramai kalau kalian berdua sedang bahagia.'], s => s.own),
+    RL('bless_florist',6,31,s => s.own ? ['Aku restui kalian sepenuh hati. Biar aku sendiri yang menyiapkan bunga terbaik untuk pernikahanmu.','Pengantin yang bahagia membuat bunga tampak lebih cantik.'] : ['Ini toko bunga pasanganmu, bukan? Mawar terbaik kupersiapkan untuk pernikahan kalian. Aku restui kalian.'], s => s.has('engaged')));
+  D.mechanic.unshift(
+    RL('react_mentor',4,16,s => ['Kabar bagus! Pantas saja kamu lebih sering tersenyum belakangan ini.','Selamat. Kalau motor pengantar butuh servis gratis untuk kencan, bilang saja.'], s => s.own && dating(s)),
+    RL('dream_mentor',5,21,s => ['Masa depan? Aku cuma tahu satu hal: mesin yang dirawat dua orang lebih awet dari mesin yang dirawat sendirian.','Hubungan juga begitu.'], s => s.own),
+    RL('promise_mentor',5,26,s => ['Berdamai, ya. Bagus. Bengkel ini terasa lebih hidup kalau kamu tidak murung.'], s => s.own),
+    RL('bless_mechanic',6,31,s => s.own ? ['Aku restui kalian. Biar aku periksa sendiri motor pengantinmu supaya tidak mogok di hari bahagia.','Selamat menempuh hidup baru.'] : ['Ini bengkel pasanganmu. Aku restui kalian, dan motor pengantinnya akan kupastikan prima.'], s => s.has('engaged')));
+
   function dialogue(npcKey, fallback) {
     const rules = D[npcKey]; if (!rules) return fallback || ['...'];
     const own = npcKey === role, s = { has, own, role, dec:k => decisions[k], hint, ch:chapter, will, day:curDay, partner, together:() => !!(opts.together && opts.together()) };
@@ -246,14 +388,34 @@ const Story = (() => {
   function look(name) { const e = LOOK[name]; if (e && curDay() >= e[1]) setFlag(e[0]); }
   // Berdekatan dengan pasangan cukup lama: flag t<hari>:<tempat>, hanya jika ada misi yang membutuhkannya
   function together(place) { const f = 't' + curDay() + ':' + place; if (neededFlags().has(f)) setFlag(f); }
-  function greet() { setFlag('greeted'); if (curDay() >= 11 && has('rumor_udin')) setFlag('apology'); }
+  // Sapaan kontekstual: bisa memicu pengakuan, pertengkaran, perdamaian, lamaran, dan janji pernikahan. Mengembalikan { msg, kind }.
+  function greet(place) {
+    const pn = partner(), d = curDay(), K = (kind, msg, refused) => ({ kind, msg, refused });
+    if (strained()) {
+      if (['erma_strain', 'lurah_strain', 'arunika_strain', 'gs:7'].every(has)) { setFlag('ice_broken'); return K('ice', `Kamu menyapa ${pn} dengan tulus. Dia menoleh pelan... es di antara kalian mulai mencair.`); }
+      return K('', `${pn} memalingkan wajah. Sepertinya dia masih kesal. Dengarkan dulu nasihat Mbak Erma, Pak Lurah, dan Bu Arunika, lalu kirim hadiah permintaan maaf ke-7.`, true);
+    }
+    setFlag('greeted'); if (d >= 11 && has('rumor_udin')) setFlag('apology');
+    if (chapter >= 6 && d >= 32 && !has('vow_given') && place === vplace('wedding_venue') && has('t32:' + place)) { setFlag('vow_given'); return K('vow', `Kamu mengucapkan janji pernikahan untuk ${pn}. 💞`); }
+    if (chapter >= 6 && d >= 27 && !has('proposal') && place === vplace('proposal_place') && has('t27:' + place)) { setFlag('proposal'); return K('proposal', `Kamu melamar ${pn} dengan tangan gemetar. 💍`); }
+    if (chapter >= 5 && d >= 26 && !has('peace') && (has('ice_broken') || has('ice_recv')) && place === 'plaza' && has('t26:plaza')) { setFlag('peace'); return K('peace', `Kamu dan ${pn} berdamai. Kalian memutuskan menyelesaikan semuanya berdua.`); }
+    if (chapter >= 5 && d >= 22 && has('offer_letter') && !has('quarrel')) { setFlag('quarrel'); return K('quarrel', `Kamu dan ${pn} berdebat soal tawaran dari luar kota. Nada suara meninggi, lalu hening...`); }
+    if (chapter >= 4 && d >= 15 && !has('confess') && place === vplace('festival_meet') && has('t15:' + place)) { setFlag('confess'); return K('confess', `Kamu menyampaikan perasaanmu pada ${pn}. Jantungmu berdebar...`); }
+    if (chapter >= 4 && d >= 20 && !has('loyal') && place === 'plaza' && has('t20:plaza')) { setFlag('loyal'); return K('loyal', `Kamu berjanji setia pada ${pn} di bawah lampu alun-alun. ❤`); }
+    return K('', `Kamu menyapa ${pn}. 👋`);
+  }
+  const RECV = { confess:'menyampaikan perasaannya padamu. ❤', loyal:'berjanji setia padamu. ❤', quarrel:'berdebat denganmu soal tawaran dari luar kota...', ice:'menyapamu dengan tulus. Hatimu mulai melunak.', peace:'berdamai denganmu. ✨', proposal:'melamarmu! 💍', vow:'mengucapkan janji pernikahan untukmu. 💞' };
+  function greetRecv(kind) {
+    const pn = partner(); if (!RECV[kind]) { setFlag('greeted'); return `${pn} menyapamu! 👋`; }
+    setFlag(kind + '_recv'); return `${pn} ${RECV[kind]}`;
+  }
 
   // ---------------- Hari & tidur ----------------
   function canSleep() {
     const d = curDay(), all = quests(), left = all.filter(q => q.day === d && !q.opt && !qDone(q));
     if (left.length) return { ok:false, msg:`Masih ada urusan hari ini: ${left.map(q => q.title).join(', ')}.` };
-    const nd = d + 1, need = nd <= 4 ? 1 : nd <= 8 ? 2 : nd <= 14 ? 3 : 4;
-    if (need === 4) return { ok:false, msg:'Hari berikutnya belum tersedia: Chapter 4 segera hadir.' };
+    const nd = d + 1, need = nd <= 4 ? 1 : nd <= 8 ? 2 : nd <= 14 ? 3 : nd <= 20 ? 4 : nd <= 26 ? 5 : nd <= 32 ? 6 : 7;
+    if (need === 7) return { ok:false, msg:'Hari berikutnya belum tersedia: Chapter 7 (Rumah Baru) segera hadir.' };
     if (need > chapter) return { ok:false, msg:isHost ? 'Tentukan dulu pilihan cerita (MISI → CERITA) sebelum hari baru dimulai.' : 'Menunggu host menentukan pilihan cerita sebelum hari baru dimulai.' };
     return { ok:true };
   }
@@ -279,10 +441,12 @@ const Story = (() => {
   function setFlag(f) {
     if (has(f)) return false;
     const before = doneSet(); flags.add(f); lsSet();
+    if (f === 'dating' || f === 'engaged' || f === 'wedding_done' || f === 'peace') cb.celebrate && cb.celebrate();
+    if (f === 'engaged' && isHost) setTimeout(() => { if (pending()) { note('Sebagai host, tentukan tempat pernikahan. Buka MISI → CERITA.'); cb.decision && cb.decision(); } }, 0);
     if (mode === 'server' && opts.persistFlag) opts.persistFlag(f).then(ok => { if (!ok) mode = 'local'; }).catch(() => {});
     const all = quests();
     for (const q of all) if (qDone(q) && !before.has(q.id)) { note(`✔ Misi selesai: ${q.title}`); if (q.reward) note(q.reward); q.grants.forEach(g => setFlag(g)); if (q.gnote) note(q.gnote); }
-    for (const n of [1, 2, 3]) { const fl = 'ch' + n + ':done';
+    for (const n of [1, 2, 3, 4, 5, 6]) { const fl = 'ch' + n + ':done';
       if (!has(fl) && chapter >= n && req(n).length && req(n).every(qDone)) { setFlag(fl); note(`Chapter ${n} selesai!`);
         if (isHost && pending()) { note('Sebagai host, kamu menentukan pilihan cerita berikutnya. Buka MISI → CERITA.'); cb.decision && cb.decision(); }
         else if (!isHost) note('Menunggu host menentukan pilihan cerita berikutnya.'); } }
@@ -299,9 +463,8 @@ const Story = (() => {
   }
   function announceDecision(k) {
     const d = DECISIONS[k], o = d.options.find(o => o.v === decisions[k]); note(`Keputusan cerita: ${d.title} — ${o.label}. ${o.effect}`);
-    chapter = Math.max(chapter, d.next); lsSet();
-    if (d.next <= 3) note(`Tidurlah di rumah masing-masing (bersamaan!) untuk memulai Hari ke-${LAST_DAY[d.next - 1] + 1} dan Chapter ${d.next}.`); else note('Chapter 4 segera hadir. Terima kasih sudah bermain sampai sejauh ini!');
-    cb.chapterCard && cb.chapterCard(d.next);
+    const prevCh = chapter; chapter = Math.max(chapter, d.next); if (k === 'wedding_venue') setFlag('venue_chosen'); lsSet();
+    if (d.next > prevCh) { if (d.next <= 6) note(`Tidurlah di rumah masing-masing (bersamaan!) untuk memulai Hari ke-${LAST_DAY[d.next - 1] + 1} dan Chapter ${d.next}.`); else note('Chapter 7 (Rumah Baru) segera hadir. Terima kasih sudah bermain sampai pernikahan!'); cb.chapterCard && cb.chapterCard(d.next); }
   }
   function remoteState(row) {
     const nd = row.decisions || {}, fresh = Object.keys(nd).filter(k => !decisions[k]); decisions = nd; if (row.chapter) chapter = Math.max(chapter, row.chapter);
@@ -320,15 +483,15 @@ const Story = (() => {
   }
 
   function view() {
-    const all = quests(), cn = chapter, ids = req(Math.min(cn, 3)).map(q => q.id), d = curDay(), rl = decisions.first_outing || has('ch3:done');
+    const all = quests(), cn = chapter, ids = req(Math.min(cn, 6)).map(q => q.id), d = curDay(), rl = decisions.first_outing || has('ch3:done');
     return { chapter:{ n:cn, ...CHAPTERS[cn] }, mode, isHost, pending:pending(), day:d, dayTitle:DAYS[d] ? DAYS[d][0] : '', will:will(), willLabel:WILL[will()],
-      progress:{ done:cn >= 4 ? 1 : ids.filter(id => qDone(all.find(q => q.id === id))).length, total:cn >= 4 ? 1 : ids.length },
+      progress:{ done:cn >= 7 ? 1 : ids.filter(id => qDone(all.find(q => q.id === id))).length, total:cn >= 7 ? 1 : ids.length },
       quests:all.map(q => { const st = qStatus(q, all); return { id:q.id, cat:q.cat, title:q.title, desc:q.desc, reward:q.reward, status:st, day:q.day, opt:q.opt,
         lock:curDay() < q.day ? `Tersedia pada Hari ${q.day}.` : 'Selesaikan misi sebelumnya.', steps:q.steps.map(s => ({ text:s.text, done:has(s.id) })) }; }),
-      rel: has('ch3:done') ? 'Sangat dekat' : (decisions.first_outing || will() >= 3) ? 'Semakin dekat' : decisions.intro_night ? 'Teman' : has('greeted') ? 'Kenalan' : 'Belum mengenal',
+      rel: has('wedding_done') ? 'Menikah' : has('engaged') ? 'Merencanakan pernikahan' : has('dating') ? 'Menjalin hubungan' : has('ch3:done') ? 'Sangat dekat' : (decisions.first_outing || will() >= 3) ? 'Semakin dekat' : decisions.intro_night ? 'Teman' : has('greeted') ? 'Kenalan' : 'Belum mengenal',
       decisions:Object.keys(decisions).filter(k => DECISIONS[k]).map(k => ({ title:DECISIONS[k].title, value:PLACE[decisions[k]] || decisions[k] })), log };
   }
-  return { init, flag:setFlag, dialogue, objects, target, view, decide, remoteState, note, has, trySleep, will, look, together, greet, landmarks:() => LANDMARKS,
+  return { init, flag:setFlag, dialogue, objects, target, view, decide, remoteState, note, has, trySleep, will, look, together, greet, greetRecv, strained, landmarks:() => LANDMARKS,
     chapter:() => chapter, day:curDay, home:homeId, canSleep, dayInfo:n => DAYS[n], decisionDef:k => DECISIONS[k], chapters:CHAPTERS,
     hasAny:() => flags.size > 0, mode:() => mode, isDone:() => decisions.intro_night };
 })();

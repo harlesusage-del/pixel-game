@@ -362,7 +362,7 @@ const Guide = (() => {
 
   const cbs = { msg: t => { toast(t); if ($('journal').classList.contains('hidden')) { unread = true; $('j-badge').classList.remove('hidden'); $('m-badge').classList.remove('hidden'); } },
     change: () => { refreshGoal(); if (!$('journal').classList.contains('hidden')) renderJournal(); },
-    decision: () => setTimeout(openDecision, 1800), chapterCard: n => setTimeout(() => card(n), 1200), dayCard: n => setTimeout(() => dayCard(n), 900) };
+    decision: () => setTimeout(openDecision, 1800), chapterCard: n => setTimeout(() => card(n), 1200), celebrate: () => Game.celebrate(), dayCard: n => setTimeout(() => dayCard(n), 900) };
 
   return {
     async init(o) { started = false; await Story.init(o, cbs); },
@@ -457,6 +457,7 @@ const Game = (() => {
     for (let i = 0; i < 3; i++) { const ph = ((now/900) + i/3) % 1; ctx.fillStyle = 'rgba(255,255,255,' + (1 - ph).toFixed(2) + ')'; ctx.fillText('z', cx + 10 + i*4 + Math.sin(ph*6)*2, top + 2 - ph*18); }
   }
   function canEnter(d) {
+    if (Story.strained() && remote.on && remote.map === d.id) { hooks.toast('Kamu masih kesal dan belum mau berada satu ruangan dengan ' + remote.name + '. Selesaikan masalah kalian dulu.'); cd = 1.5; return false; }
     if (d.id !== 'school') return true;
     if (!Story.has('got_letter')) { hooks.toast('Sekolah ini hanya untuk warga yang diundang. Temui Pak Lurah di Balai Kota dulu.'); cd = 1.5; return false; }
     const w = Story.will(), pn = remote.name; let nearP = false, recent = false;
@@ -466,14 +467,14 @@ const Game = (() => {
       if (remote.map === 'school' && w < 1) { hooks.toast(pn + ' sedang di dalam. Kamu enggan masuk selagi dia di sana.'); cd = 1.5; return false; } }
     if (w >= 2 && (nearP || recent) && Story.day() >= 4) { Story.flag('school_together'); Story.together('schoolgate'); hooks.toast('Kalian melangkah masuk bersama! ✨'); }
     return true; }
+  function placeKey() { if (scene.id !== 'kota') return scene.id; for (const L of Story.landmarks()) if ((L.flag === 'view:plaza' || L.flag === 'view:park') && Math.hypot(me.x - L.x, me.y - L.y) < L.r * 1.4) return L.flag.slice(5); return ''; }
   function social() {
     if (trans) return;
     if (scene.id === 'kota' && Story.day() >= 2) for (const L of Story.landmarks()) { if (L.flag === 'view:school' && !Story.has('got_letter')) continue; if (Math.hypot(me.x - L.x, me.y - L.y) < L.r) Story.flag(L.flag); }
     if (!remote.on || remote.map !== scene.id) return;
     const dist = Math.hypot(remote.x - me.x, remote.y - me.y);
-    let place = scene.id;
-    if (scene.id === 'kota') { place = ''; for (const L of Story.landmarks()) if ((L.flag === 'view:plaza' || L.flag === 'view:park') && Math.hypot(me.x - L.x, me.y - L.y) < L.r * 1.4) place = L.flag.slice(5); }
-    if (place) { if (dist < 56) { dwell[place] = (dwell[place] || 0) + 0.25; if (dwell[place] >= 5) Story.together(place); } else dwell[place] = 0; }
+    const place = placeKey();
+    if (place) { if (dist < 56 && !Story.strained()) { dwell[place] = (dwell[place] || 0) + 0.25; if (dwell[place] >= 5) { Story.together(place); if (daylight(clockMin()) < 0.6) Story.together(place + '_night'); } } else dwell[place] = 0; }
     if (scene.id === 'school') { if (Story.day() >= 3 && Story.will() >= 1) Story.flag('school_copresent'); if (dist < 56 && Story.chapter() >= 2 && Story.day() >= 5) Story.flag('class_together'); }
   }
   function enter(d) { if (!canEnter(d)) return; fadeTo(() => { outPos = { x:d.x, y:d.y + 10 }; setScene(Scenes.interior(d.id)); me.x = scene.spawn.x; me.y = scene.spawn.y; me.vx = me.vy = 0; me.dir = 'up';
@@ -494,7 +495,7 @@ const Game = (() => {
   $('g-full').onclick = () => { const el = document.documentElement; if (!document.fullscreenElement) { if (el.requestFullscreen) el.requestFullscreen().catch(() => {}); else hooks.toast && hooks.toast('Browser ini belum mendukung layar penuh. Di iPhone: Bagikan → Tambah ke Layar Utama agar tampil penuh.'); } else if (document.exitFullscreen) document.exitFullscreen(); };
   $('g-fx').onclick = () => { fxOn = !fxOn; try { localStorage.setItem('pl_fx', fxOn ? '1' : '0'); } catch (e) {} hooks.toast && hooks.toast('Efek visual: ' + (fxOn ? 'AKTIF' : 'MODE RINGAN')); };
 
-  function greet() { if (hooks.sendGreet) hooks.sendGreet({ name:me.name }); Story.greet(); hooks.toast('Kamu menyapa ' + remote.name + '. 👋'); }
+  function greet() { const r = Story.greet(placeKey()); if (!r.refused && hooks.sendGreet) hooks.sendGreet({ name:me.name, kind:r.kind }); hooks.toast(r.msg); }
   function findNear() {
     near = null; let best = Infinity;
     if (remote.on && remote.map === scene.id) { const dd = Math.hypot(remote.x - me.x, remote.y - me.y); if (dd < 30) { best = dd; near = { label:'Sapa ' + remote.name, run:greet }; } }
@@ -530,7 +531,7 @@ const Game = (() => {
     me.moving = Math.hypot(me.vx, me.vy) > 4;
     if (me.moving) { me.anim += dt*9; me.dir = Math.abs(me.vx) > Math.abs(me.vy) ? (me.vx > 0 ? 'right' : 'left') : (me.vy > 0 ? 'down' : 'up'); } else me.anim = 0;
     if (scene.step) scene.step(dt);
-    updateFx(dt);
+    updateFx(dt); updateConfetti(dt);
     // Masuk/keluar otomatis saat berjalan ke pintu
     if (!trans && cd <= 0) {
       if (scene.id === 'kota') { for (const d of scene.doors) if (Math.abs(me.x - d.x) <= 9 && me.y <= d.y + 7 && me.y > d.y - 12 && me.vy < -8) { enter(d); break; } }
@@ -625,6 +626,12 @@ const Game = (() => {
       for (const d of rainDrops) { const sx = d.x*cv.width, sy = d.y*cv.height; ctx.moveTo(sx, sy); ctx.lineTo(sx - 3*scale*0.5, sy + 7*scale*0.6); } ctx.stroke(); }
   }
 
+  const confetti = []; let confT = 0;
+  function updateConfetti(dt) {
+    if (confT > 0) { confT -= dt; for (let i = 0; i < 3; i++) confetti.push({ x:Math.random()*cv.width, y:-10, vx:(Math.random() - 0.5)*60, vy:120 + Math.random()*160, c:['#ff8fb8','#f2c14e','#7fb8e6','#6fcf97','#ffffff'][Math.floor(Math.random()*5)], r:Math.random()*6 }); }
+    for (let i = confetti.length - 1; i >= 0; i--) { const p = confetti[i]; p.x += p.vx*dt; p.y += p.vy*dt*(cv.height/900); p.r += dt*8; if (p.y > cv.height + 10) confetti.splice(i, 1); }
+  }
+  function drawConfetti() { for (const p of confetti) { ctx.fillStyle = p.c; const s = Math.max(3, scale); ctx.fillRect(p.x, p.y, s*(1 + Math.abs(Math.sin(p.r))), s); } }
   function draw() {
     ctx.setTransform(1,0,0,1,0,0); ctx.fillStyle = scene.id === 'kota' ? '#1d2033' : '#120f1c'; ctx.fillRect(0,0,cv.width,cv.height);
     ctx.setTransform(scale,0,0,scale, -Math.round(cam.x*scale), -Math.round(cam.y*scale)); ctx.imageSmoothingEnabled = false;
@@ -650,7 +657,7 @@ const Game = (() => {
         const ex = clamp(sx, m, cv.width - m), ey = clamp(sy, m + 60, cv.height - m);
         ctx.save(); ctx.translate(ex, ey); ctx.rotate(ang); ctx.fillStyle = '#f2c14e'; ctx.beginPath(); ctx.moveTo(14,0); ctx.lineTo(-8,-9); ctx.lineTo(-8,9); ctx.fill(); ctx.restore();
         ctx.font = 'bold 12px monospace'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.fillText(remote.name, ex, ey - 16); } }
-    drawAtmos();
+    drawAtmos(); drawConfetti();
     const vg = ctx.createRadialGradient(cv.width/2, cv.height/2, Math.min(cv.width, cv.height)*0.45, cv.width/2, cv.height/2, Math.max(cv.width, cv.height)*0.75);
     vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(10,10,30,.28)'); ctx.fillStyle = vg; ctx.fillRect(0,0,cv.width,cv.height);
     if (trans) { const al = trans.phase === 'out' ? trans.t/0.18 : 1 - trans.t/0.18; ctx.fillStyle = `rgba(0,0,0,${clamp(al,0,1)})`; ctx.fillRect(0,0,cv.width,cv.height); }
@@ -669,8 +676,8 @@ const Game = (() => {
       Guide.begin();
       running = true; last = performance.now(); raf = requestAnimationFrame(frame); },
     stop() { running = false; cancelAnimationFrame(raf); dialog = null; sleeping = false; dawning = false; $('sleepui').classList.add('hidden'); $('fadeblk').classList.remove('on'); $('dlg').classList.add('hidden'); $('prompt').classList.add('hidden'); },
-    onGreet(p) { Story.flag('greeted'); hooks.toast((p && p.name || 'Pasanganmu') + ' menyapamu! 👋'); },
-    sceneId: () => scene.id,
+    onGreet(p) { hooks.toast(Story.greetRecv(p && p.kind)); },
+    sceneId: () => scene.id, celebrate() { confT = 8; },
     together: () => remote.on && remote.map === scene.id && Math.hypot(remote.x - me.x, remote.y - me.y) < 56,
     getPos: () => scene.id === 'kota' ? { x:me.x, y:me.y } : { x:outPos.x, y:outPos.y }, // di dalam bangunan, simpan posisi di depan pintu
     onRemote(p) { remote.sl = !!p.sl; if (p.sl) remote.slAt = performance.now(); remote.tx = p.x; remote.ty = p.y; remote.dir = p.dir; remote.moving = !!p.mv; remote.seen = performance.now();
@@ -759,7 +766,7 @@ async function startStory(mine) {
   if (storyChannel) { sb.removeChannel(storyChannel); storyChannel = null; }
   const other = members.find(m => m.user_id !== me.id);
   await Econ.init({ sb, world: world.id, me: me.id, role: mine.character_role, names, partnerId: () => { const o = members.find(m => m.user_id !== me.id); return o && o.user_id; },
-    inShop: () => Game.sceneId() === mine.character_role, locked: () => Story.day() < 5, onFlag: f => Story.flag(f), notify: t => Guide.msg(t) });
+    inShop: () => Game.sceneId() === mine.character_role, locked: () => Story.day() < 5, chapter: () => Story.chapter(), onFlag: f => Story.flag(f), notify: t => Guide.msg(t) });
   if (server) storyChannel = sb.channel('story:' + world.id).on('postgres_changes', { event: '*', schema: 'public', table: 'story_state', filter: 'world_id=eq.' + world.id }, p => { if (p.new) Guide.remoteState(p.new); }).subscribe();
 }
 

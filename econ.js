@@ -7,12 +7,12 @@ const Econ = (() => {
   const uid4 = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(16).slice(2));
   const CAT = { florist:{ mawar:['Mawar',8], tulip:['Tulip',7], lili:['Lili',10], pita:['Pita',4], kertas:['Kertas pembungkus',5] },
                 mechanic:{ busi:['Busi',9], kampas:['Kampas rem',14], rantai:['Rantai',18], oli:['Oli mesin',10], filter:['Filter udara',12] } };
-  const KIND = { seed:'Modal awal', fund_business:'Modal ke usaha', withdraw:'Tarik dari usaha', buy_stock:'Beli bahan', sale:'Pendapatan pesanan', gift:'Hadiah', upgrade:'Upgrade usaha', loan_disburse:'Pencairan pinjaman', loan_payment:'Pembayaran pinjaman' };
+  const KIND = { seed:'Modal awal', fund_business:'Modal ke usaha', withdraw:'Tarik dari usaha', buy_stock:'Beli bahan', sale:'Pendapatan pesanan', gift:'Hadiah', family_in:'Setoran tabungan bersama', family_spend:'Pengeluaran bersama', upgrade:'Upgrade usaha', loan_disburse:'Pencairan pinjaman', loan_payment:'Pembayaran pinjaman' };
   const PURPOSE = { modal_bisnis:'Modal bisnis', pembelian_bahan:'Pembelian bahan', upgrade:'Upgrade usaha', rumah:'Kebutuhan rumah', keluarga:'Pengeluaran keluarga', lainnya:'Lainnya' };
   const STAT = { MENUNGGU_PERSETUJUAN:'MENUNGGU PERSETUJUAN', MENAWAR:'MENAWAR ULANG', AKTIF:'AKTIF', LUNAS:'LUNAS', DITOLAK:'DITOLAK', DIBATALKAN:'DIBATALKAN' };
   const UPCOST = { 1:250, 2:500 };
 
-  let prevGR = null, sb = null, world = null, me = null, role = 'florist', names = {}, st = null, tab = 'saldo', busy = false, ch = null, o = {}, loaded = false, unavailable = false, prevLoans = null, prevResetStatus = null, noteTimer = 0;
+  let prevFam = null, prevGR = null, sb = null, world = null, me = null, role = 'florist', names = {}, st = null, tab = 'saldo', busy = false, ch = null, o = {}, loaded = false, unavailable = false, prevLoans = null, prevResetStatus = null, noteTimer = 0;
 
   const myW = kind => st && st.wallets.find(w => w.owner_id === me && w.kind === kind);
   const partnerId = () => o.partnerId && o.partnerId();
@@ -44,11 +44,20 @@ const Econ = (() => {
     if (st.gifts) { for (let n = 1; n <= 8; n++) { if (st.gifts.sent >= n) o.onFlag && o.onFlag('gs:' + n); if (st.gifts.received >= n) o.onFlag && o.onFlag('gr:' + n); }
       if (prevGR !== null && st.gifts.received > prevGR) o.notify && o.notify(`🎁 ${nm(partnerId())} mengirim hadiah untukmu!`); prevGR = st.gifts.received; }
     if (st.loans.filter(l => l.status === 'AKTIF' || l.status === 'LUNAS').length >= 2) o.onFlag && o.onFlag('loans:2');
+    const fm = st.family; if (fm) {
+      if (fm.wallet) { o.onFlag && o.onFlag('fam_open'); for (const n of [100, 300]) if (fm.in_mine >= n) o.onFlag && o.onFlag('fam_in:' + n); for (const n of [300, 800]) if (fm.in_total >= n) o.onFlag && o.onFlag('fam_tot:' + n); }
+      for (const r of fm.requests || []) if (r.status === 'DISETUJUI' && r.amount >= 100) o.onFlag && o.onFlag('fam:' + r.purpose);
+      const fmap = new Map((fm.requests || []).map(r => [r.id, r.status]));
+      if (prevFam) for (const r of fm.requests || []) { const was = prevFam.get(r.id);
+        if (!was && r.by !== me && r.status === 'MENUNGGU') o.notify && o.notify(`🏠 ${nm(r.by)} mengajukan pengeluaran bersama ${KC(r.amount)}. Buka UANG → TABUNGAN.`);
+        else if (was === 'MENUNGGU' && r.status !== was && r.by === me) o.notify && o.notify(r.status === 'DISETUJUI' ? 'Pengeluaran bersama disetujui. ✔' : 'Pengeluaran bersama tidak jadi.'); }
+      prevFam = fmap; }
+    if (st.specials && st.specials.length) o.onFlag && o.onFlag('wedding_item');
     if (st.loans.some(l => l.status === 'AKTIF' || l.status === 'LUNAS')) o.onFlag && o.onFlag('loan_active');
     if (st.loans.some(l => l.status === 'LUNAS')) o.onFlag && o.onFlag('loan_settled');
     if (st.inventory.length || st.ledger.some(t => t.kind === 'buy_stock')) o.onFlag && o.onFlag('stock_bought');
-    const b = myBiz(); if (b && b.level >= 2) o.onFlag && o.onFlag('upgraded'); if (b) for (const n of [1, 3, 5, 8, 12, 15]) if (b.reputation >= n) o.onFlag && o.onFlag('rep:' + n);
-    const bw = myW('business'); if (bw) for (const n of [500, 800, 1000, 1200]) if (bw.balance >= n) o.onFlag && o.onFlag('cash:' + n);
+    const b = myBiz(); if (b && b.level >= 2) o.onFlag && o.onFlag('upgraded'); if (b) for (const n of [1, 3, 5, 8, 12, 15, 18, 20, 22, 25]) if (b.reputation >= n) o.onFlag && o.onFlag('rep:' + n);
+    const bw = myW('business'); if (bw) for (const n of [500, 800, 1000, 1200, 1500, 1800, 2000]) if (bw.balance >= n) o.onFlag && o.onFlag('cash:' + n);
     const r = st.reset, rs = r ? r.status : null;
     if (r && prevResetStatus !== rs) {
       if (rs === 'menunggu' && r.requested_by !== me) o.notify && o.notify(`⚠ ${nm(r.requested_by)} mengajukan RESET DUNIA. Buka UANG → DUNIA untuk menyetujui atau menolak.`);
@@ -61,14 +70,14 @@ const Econ = (() => {
   }
 
   // ---------------- Tampilan ----------------
-  const tabs = ['saldo', 'bisnis', 'pinjaman', 'riwayat', 'dunia'], TL = { saldo:'SALDO', bisnis:'BISNIS', pinjaman:'PINJAMAN', riwayat:'RIWAYAT', dunia:'DUNIA' };
+  const tabs = ['saldo', 'bisnis', 'pinjaman', 'tabungan', 'riwayat', 'dunia'], TL = { saldo:'SALDO', bisnis:'BISNIS', pinjaman:'PINJAMAN', tabungan:'TABUNGAN', riwayat:'RIWAYAT', dunia:'DUNIA' };
   function render() {
     if ($('econ').classList.contains('hidden')) return;
     $('e-tabs').innerHTML = tabs.map(t => `<button data-tab="${t}" class="${t === tab ? 'on' : ''}">${TL[t]}</button>`).join('');
     const body = $('e-body');
     if (unavailable) { body.innerHTML = '<p>Fitur keuangan belum aktif di server. Jalankan <b>003_economy.sql</b> di Supabase SQL Editor, lalu muat ulang game.</p>'; return; }
     if (!st) { body.innerHTML = '<p>Memuat…</p>'; return; }
-    body.innerHTML = ({ saldo:vSaldo, bisnis:vBisnis, pinjaman:vPinjaman, riwayat:vRiwayat, dunia:vDunia })[tab]();
+    body.innerHTML = ({ saldo:vSaldo, bisnis:vBisnis, pinjaman:vPinjaman, tabungan:vTabungan, riwayat:vRiwayat, dunia:vDunia })[tab]();
   }
   function vSaldo() {
     const p = myW('personal'), b = myW('business'), pb = partnerBiz(), pw = pb && st.wallets.find(w => w.owner_id === pb.owner_id && w.kind === 'business');
@@ -93,7 +102,7 @@ const Econ = (() => {
     h += `<div class="cat">PESANAN (${st.orders.length}/${maxO})</div>`;
     h += st.orders.length ? st.orders.map(r => { const ok = Object.entries(r.need).every(([k, v]) => (inv[k] || 0) >= v);
       return `<div class="q ${ok ? 's-BERLANGSUNG' : ''}"><span class="st">${KC(r.reward)}</span><h3>${esc(r.title)}</h3><p>Butuh: ${Object.entries(r.need).map(([k, v]) => `${v}× ${esc(cat[k] ? cat[k][0] : k)} (punya ${inv[k] || 0})`).join(', ')}</p><button data-act="fulfill" data-id="${r.id}" ${ok ? '' : 'class="sec"'}>KERJAKAN</button></div>`; }).join('') : '<p>Belum ada pesanan.</p>';
-    h += `<button data-act="neworder" class="sec">CEK PESANAN BARU</button><div class="cat">BELI BAHAN (kas usaha)</div>`;
+    h += `<button data-act="neworder" class="sec">CEK PESANAN BARU</button>${(o.chapter && o.chapter() >= 6 && !(st.specials || []).length && !st.orders.some(r => /Pengantin/.test(r.title))) ? '<button data-act="special">PESANAN SPESIAL PERNIKAHAN</button>' : ''}<div class="cat">BELI BAHAN (kas usaha)</div>`;
     h += Object.entries(cat).map(([k, [n, p]]) => `<div class="m"><span>${esc(n)} <small>${KC(p)} · stok ${inv[k] || 0}</small></span><span style="display:flex;gap:6px"><button data-act="buy" data-item="${k}" data-qty="1" style="width:56px">+1</button><button data-act="buy" data-item="${k}" data-qty="5" style="width:56px">+5</button></span></div>`).join('');
     return h;
   }
@@ -118,6 +127,21 @@ const Econ = (() => {
       <input id="l-n" type="number" min="1" max="24" placeholder="Jumlah cicilan" inputmode="numeric">
       <select id="l-t">${Object.entries(PURPOSE).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select><p id="l-prev" class="mut">Isi jumlah, bunga, dan cicilan untuk melihat perhitungan.</p>
       <button data-act="loanreq">AJUKAN PINJAMAN</button><div class="cat">KONTRAK</div>${st.loans.length ? st.loans.map(loanCard).join('') : '<p>Belum ada kontrak.</p>'}`;
+  }
+  function vTabungan() {
+    const f = st.family; if (!f) return '<p>Fitur tabungan bersama belum aktif di server. Jalankan <b>005_family.sql</b> di Supabase SQL Editor, lalu muat ulang game.</p>';
+    if (o.chapter && o.chapter() < 5) return '<p>Tabungan bersama dibuka pada <b>Chapter 5</b>. Selesaikan dulu Chapter 4.</p>';
+    if (!partnerId()) return '<p>Tabungan bersama butuh pemain kedua.</p>';
+    if (!f.wallet) return '<p>Tabungan bersama dipakai untuk tujuan yang kalian sepakati berdua (misalnya pernikahan). Uangnya milik <b>berdua</b>, dan setiap pengeluaran butuh persetujuan kedua pemain. Menikah tidak menggabungkan uang pribadimu.</p><button data-act="famopen">BUKA TABUNGAN BERSAMA</button>';
+    const PUR = { gedung:'Gedung / tempat', dekorasi:'Dekorasi', busana:'Busana', jamuan:'Jamuan', rumah:'Rumah', lainnya:'Lainnya' };
+    let h = `<div class="jch">SALDO BERSAMA</div><div class="big">${KC(f.wallet.balance)}</div><p class="mut">Total disetor: ${KC(f.in_total)} · Setoranmu: ${KC(f.in_mine)}</p>
+      <input id="f-amt" type="number" min="1" placeholder="Jumlah setoran (KC)" inputmode="numeric"><button data-act="famin">SETOR DARI UANG PRIBADI</button>
+      <div class="jch">AJUKAN PENGELUARAN</div><select id="f-pur">${Object.entries(PUR).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
+      <input id="f-pamt" type="number" min="1" placeholder="Jumlah (KC)" inputmode="numeric"><button data-act="fampropose">AJUKAN (pasangan harus menyetujui)</button><div class="cat">PERMINTAAN</div>`;
+    h += f.requests.length ? f.requests.map(r => { const mine = r.by === me;
+      return `<div class="q s-${r.status === 'MENUNGGU' ? 'TERSEDIA' : r.status === 'DISETUJUI' ? 'SELESAI' : 'TERKUNCI'}"><span class="st">${r.status}</span><h3>${esc(PUR[r.purpose] || r.purpose)}: ${KC(r.amount)}</h3><p>Diajukan oleh ${esc(nm(r.by))}${mine ? ' (kamu)' : ''}</p>` +
+        (r.status === 'MENUNGGU' ? (mine ? `<button data-act="famcancel" data-id="${r.id}" class="sec">BATALKAN</button>` : `<div class="row"><button data-act="famyes" data-id="${r.id}">SETUJUI</button><button data-act="famno" data-id="${r.id}" class="sec">TOLAK</button></div>`) : '') + '</div>'; }).join('') : '<p>Belum ada permintaan.</p>';
+    return h;
   }
   function vRiwayat() {
     const mine = new Set(st.wallets.filter(w => w.owner_id === me).map(w => w.id));
@@ -148,6 +172,13 @@ const Econ = (() => {
     const a = b.dataset.act, d = b.dataset;
     if (a === 'fund' || a === 'withdraw') call('econ_transfer', { p_dir:a, p_amount:Math.floor(num('e-amt')), p_key:uid4() }, 'Transfer berhasil.');
     else if (a === 'gift') call('econ_gift', { p_amount:Math.floor(num('g-amt')), p_key:uid4() }, 'Hadiah terkirim. 💝');
+    else if (a === 'special') call('biz_special_order', { p_kind:'wedding' }, 'Pesanan spesial pernikahan diterima!');
+    else if (a === 'famopen') call('family_open', {}, 'Tabungan bersama dibuka.');
+    else if (a === 'famin') call('family_contribute', { p_amount:Math.floor(num('f-amt')), p_key:uid4() }, 'Setoran masuk ke tabungan bersama.');
+    else if (a === 'fampropose') call('family_propose', { p_purpose:$('f-pur').value, p_amount:Math.floor(num('f-pamt')), p_key:uid4() }, 'Permintaan diajukan. Menunggu persetujuan pasangan.');
+    else if (a === 'famyes') { if (confirm('Setujui pengeluaran ini dari tabungan bersama?')) call('family_respond', { p_req:d.id, p_action:'approve' }, 'Pengeluaran disetujui.'); }
+    else if (a === 'famno') call('family_respond', { p_req:d.id, p_action:'reject' }, 'Permintaan ditolak.');
+    else if (a === 'famcancel') call('family_respond', { p_req:d.id, p_action:'cancel' }, 'Permintaan dibatalkan.');
     else if (a === 'neworder') call('biz_new_order', {}, 'Pesanan baru diterima.');
     else if (a === 'buy') call('biz_buy', { p_item:d.item, p_qty:Number(d.qty), p_key:uid4() }, 'Bahan dibeli.');
     else if (a === 'fulfill') { const od = st.orders.find(x => x.id === d.id); if (!od) return; const inv = Object.fromEntries(st.inventory.map(i => [i.item, i.qty]));
@@ -169,13 +200,13 @@ const Econ = (() => {
 
   function open(t) { tab = t || tab; setMsg(''); $('econ').classList.remove('hidden'); render(); refresh(); }
   async function init(opts) {
-    o = opts; sb = opts.sb; world = opts.world; me = opts.me; role = opts.role; names = opts.names; st = null; unavailable = false; prevLoans = null; prevResetStatus = null; prevGR = null;
+    o = opts; sb = opts.sb; world = opts.world; me = opts.me; role = opts.role; names = opts.names; st = null; unavailable = false; prevLoans = null; prevResetStatus = null; prevGR = null; prevFam = null;
     const { data, error } = await sb.rpc('econ_init', { p_world: world });
     if (error) { unavailable = true; if (o.notify) setTimeout(() => o.notify('Fitur uang belum aktif di server (jalankan 003_economy.sql).'), 1500); return; }
     st = data; prevLoans = new Map(st.loans.map(l => [l.id, l.status])); prevResetStatus = st.reset ? st.reset.status : null; afterState();
     if (ch) sb.removeChannel(ch);
     ch = sb.channel('econ:' + world);
-    for (const t of ['wallets', 'loan_contracts', 'business_orders', 'world_reset_requests']) ch.on('postgres_changes', { event:'*', schema:'public', table:t, filter:'world_id=eq.' + world }, () => { clearTimeout(noteTimer); noteTimer = setTimeout(refresh, 250); });
+    for (const t of ['wallets', 'loan_contracts', 'business_orders', 'world_reset_requests', ...(st.family ? ['family_requests'] : [])]) ch.on('postgres_changes', { event:'*', schema:'public', table:t, filter:'world_id=eq.' + world }, () => { clearTimeout(noteTimer); noteTimer = setTimeout(refresh, 250); });
     ch.subscribe();
   }
   function stop() { if (ch && sb) { sb.removeChannel(ch); ch = null; } st = null; }
